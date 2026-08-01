@@ -1,0 +1,437 @@
+-- ============================================
+-- Sentinel Hub By ZΞRØ
+-- ============================================
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local CoreGui = game:GetService("CoreGui")
+local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
+
+local menuKeyBind = nil
+local isBindingMenuKey = false
+local ignoreMenuToggleAfterBinding = false
+local isSentinelKept = true
+local ScriptURL = `loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Sentinel-Hub/main/Source"))()`
+
+game.Players.LocalPlayer.OnTeleport:Connect(function(State)
+	if isSentinelKept and queueteleport then
+		queueteleport(ScriptURL)
+	end
+end)
+
+-- ============================================
+-- UI CREATION
+-- ============================================
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ModernMenuGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = CoreGui
+
+local menuFrame = Instance.new("Frame")
+menuFrame.Name = "ModernMenu"
+menuFrame.Size = UDim2.new(0.72, 0, 0.78, 0)
+menuFrame.Position = UDim2.new(0.14, 0, 0.11, 0)
+menuFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+menuFrame.BackgroundTransparency = 0.12
+menuFrame.BorderSizePixel = 0
+menuFrame.ZIndex = 1
+menuFrame.Visible = false
+menuFrame.Parent = screenGui
+
+local menuCorner = Instance.new("UICorner")
+menuCorner.CornerRadius = UDim.new(0, 22)
+menuCorner.Parent = menuFrame
+
+local topBarLabel = Instance.new("TextLabel")
+topBarLabel.Name = "TopBarLabel"
+topBarLabel.Size = UDim2.new(0.6, 0, 0, 30)
+topBarLabel.Position = UDim2.new(0.2, 0, 0, 18)
+topBarLabel.BackgroundTransparency = 1
+topBarLabel.Text = "Main"
+topBarLabel.TextColor3 = Color3.fromRGB(255,255,255)
+topBarLabel.TextScaled = true
+topBarLabel.TextXAlignment = Enum.TextXAlignment.Center
+topBarLabel.Parent = menuFrame
+
+local wardFrame = Instance.new("Frame")
+wardFrame.Name = "WardFrame"
+wardFrame.Size = UDim2.new(0.25, 0, 0.71, 0)
+wardFrame.Position = UDim2.new(menuFrame.Position.X.Scale, menuFrame.Position.X.Offset + 10, menuFrame.Position.Y.Scale, menuFrame.Position.Y.Offset + 60)
+wardFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+wardFrame.BorderSizePixel = 0
+wardFrame.Visible = false
+wardFrame.ZIndex = 10
+wardFrame.Parent = screenGui
+
+local wardCorner = Instance.new("UICorner")
+wardCorner.CornerRadius = UDim.new(0, 12)
+wardCorner.Parent = wardFrame
+
+local wardListLayout = Instance.new("UIListLayout")
+wardListLayout.Padding = UDim.new(0, 0)
+wardListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+wardListLayout.Parent = wardFrame
+
+local wardPadding = Instance.new("UIPadding")
+wardPadding.PaddingLeft = UDim.new(0, 8)
+wardPadding.PaddingRight = UDim.new(0, 8)
+wardPadding.PaddingTop = UDim.new(0, 0)
+wardPadding.PaddingBottom = UDim.new(0, 0)
+wardPadding.Parent = wardFrame
+
+local contentFrame = Instance.new("Frame")
+contentFrame.Name = "ContentFrame"
+contentFrame.Size = UDim2.new(0.72 - 0.25 - 0.02, 0, 0.85, 0)
+contentFrame.Position = UDim2.new(0.25 + 0.02, 0, 0.11 + 0.06, 0)
+contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = menuFrame
+
+-- ============================================
+-- BUTTONS
+-- ============================================
+
+local openButton = Instance.new("ImageButton")
+openButton.Name = "OpenMenuButton"
+openButton.Image = "rbxassetid://86826303307578"
+openButton.ImageColor3 = Color3.fromRGB(255, 255, 255)
+openButton.ScaleType = Enum.ScaleType.Fit
+openButton.Size = UDim2.new(0, 48, 0, 48)
+openButton.Position = UDim2.new(0, 20, 0, 380)
+openButton.ZIndex = 2147483647
+openButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+openButton.BackgroundTransparency = 0
+openButton.BorderSizePixel = 0
+openButton.AutoButtonColor = true
+openButton.Parent = screenGui
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 14)
+buttonCorner.Parent = openButton
+
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Text = "X"
+closeButton.Size = UDim2.new(0, 36, 0, 36)
+closeButton.Position = UDim2.new(1, -46, 0, 14)
+closeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+closeButton.BorderSizePixel = 0
+closeButton.TextSize = 24
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Parent = menuFrame
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 10)
+closeCorner.Parent = closeButton
+
+local hamburgerButton = Instance.new("TextButton")
+hamburgerButton.Name = "HamburgerButton"
+hamburgerButton.Text = "Ξ"
+hamburgerButton.Size = UDim2.new(0, 40, 0, 40)
+hamburgerButton.Position = UDim2.new(0, 14, 0, 14)
+hamburgerButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+hamburgerButton.BorderSizePixel = 0
+hamburgerButton.TextSize = 24
+hamburgerButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+hamburgerButton.Parent = menuFrame
+
+local hamburgerCorner = Instance.new("UICorner")
+hamburgerCorner.CornerRadius = UDim.new(0, 10)
+hamburgerCorner.Parent = hamburgerButton
+
+local IYButton = Instance.new("TextButton")
+IYButton.Name = "IYButton"
+IYButton.Text = "IY (PC Only)"
+IYButton.Size = UDim2.new(0, 200, 0, 80)
+IYButton.Position = UDim2.new(0, -360, 0, -75)
+IYButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+IYButton.BorderSizePixel = 0
+IYButton.TextSize = 14
+IYButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+IYButton.Parent = contentFrame
+
+local IYCorner = Instance.new("UICorner")
+IYCorner.CornerRadius = UDim.new(0, 10)
+IYCorner.Parent = IYButton
+
+local CryptonButton = Instance.new("TextButton")
+CryptonButton.Name = "CryptonButton"
+CryptonButton.Text = "Crypton (PC Only)"
+CryptonButton.Size = UDim2.new(0, 200, 0, 80)
+CryptonButton.Position = UDim2.new(0, -140, 0, -75)
+CryptonButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+CryptonButton.BorderSizePixel = 0
+CryptonButton.TextSize = 14
+CryptonButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CryptonButton.Parent = contentFrame
+
+local CryptonCorner = Instance.new("UICorner")
+CryptonCorner.CornerRadius = UDim.new(0, 10)
+CryptonCorner.Parent = CryptonButton
+
+local YARHMButton = Instance.new("TextButton")
+YARHMButton.Name = "YARHMButton"
+YARHMButton.Text = "YARHM"
+YARHMButton.Size = UDim2.new(0, 200, 0, 80)
+YARHMButton.Position = UDim2.new(0, 80, 0, -75)
+YARHMButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+YARHMButton.BorderSizePixel = 0
+YARHMButton.TextSize = 14
+YARHMButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+YARHMButton.Parent = contentFrame
+
+local YARHMCorner = Instance.new("UICorner")
+YARHMCorner.CornerRadius = UDim.new(0, 10)
+YARHMCorner.Parent = YARHMButton
+
+local sectionButtonTexts = {
+    "Main",
+    "Skibidi",
+    "Lesgosky",
+    "Sigma",
+    "Settings"
+}
+
+local sectionButtons = {}
+for i, buttonText in ipairs(sectionButtonTexts) do
+    local sectionButton = Instance.new("TextButton")
+    sectionButton.Name = "SectionButton" .. i
+    sectionButton.Text = buttonText
+    sectionButton.Size = UDim2.new(1, 0, 0.2, 0)
+    sectionButton.BorderSizePixel = 0
+    sectionButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    sectionButton.TextSize = 14
+    sectionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    sectionButton.ZIndex = 11
+    sectionButton.LayoutOrder = i
+    sectionButton.Parent = wardFrame
+    
+    local sectionCorner = Instance.new("UICorner")
+    sectionCorner.CornerRadius = UDim.new(0, 8)
+    sectionCorner.Parent = sectionButton
+    
+    sectionButtons[buttonText] = sectionButton
+end
+
+-- ============================================
+-- BUTTON SCRIPTS
+-- ============================================
+
+local dragging = false
+local dragMoved = false
+local dragInput, dragStart, startPos
+
+local function updateButtonPosition(input)
+    local delta = input.Position - dragStart
+    local newX = math.clamp(startPos.X.Offset + delta.X, 0, workspace.CurrentCamera.ViewportSize.X - openButton.AbsoluteSize.X)
+    local newY = math.clamp(startPos.Y.Offset + delta.Y, 0, workspace.CurrentCamera.ViewportSize.Y - openButton.AbsoluteSize.Y)
+    openButton.Position = UDim2.new(0, newX, 0, newY)
+
+    if delta.Magnitude > 5 then
+        dragMoved = true
+    end
+end
+
+openButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragMoved = false
+        dragStart = input.Position
+        startPos = openButton.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+openButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        updateButtonPosition(input)
+    end
+end)
+
+local function setMenuOpen(isOpen)
+    menuFrame.Visible = isOpen
+    openButton.Visible = not isOpen
+    if not isOpen then
+        wardFrame.Visible = false
+    end
+end
+
+openButton.MouseButton1Click:Connect(function()
+    if dragMoved then
+        dragMoved = false
+        return
+    end
+    setMenuOpen(true)
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    setMenuOpen(false)
+end)
+
+hamburgerButton.MouseButton1Click:Connect(function()
+    wardFrame.Visible = not wardFrame.Visible
+end)
+
+for buttonText, sectionButton in pairs(sectionButtons) do
+    sectionButton.MouseButton1Click:Connect(function()
+        wardFrame.Visible = false
+        for _, child in ipairs(contentFrame:GetChildren()) do
+            if child:IsA("Frame") or child:IsA("TextButton") then
+                child.Visible = false
+            end
+        end
+        
+        if buttonText == "Main" then
+            CryptonButton.Visible = true
+            IYButton.Visible = true
+            YARHMButton.Visible = true
+            topBarLabel.Text = "Main"
+        elseif buttonText == "Settings" then
+            local settingsFrame = contentFrame:FindFirstChild("SettingsFrame")
+            if not settingsFrame then
+                settingsFrame = Instance.new("Frame")
+                settingsFrame.Name = "SettingsFrame"
+                settingsFrame.Size = UDim2.new(1, 0, 1, 0)
+                settingsFrame.BackgroundTransparency = 1
+                settingsFrame.Parent = contentFrame
+
+                local unloadButton = Instance.new("TextButton")
+                unloadButton.Name = "UnloadButton"
+                unloadButton.Text = "Unload"
+                unloadButton.Size = UDim2.new(0, 200, 0, 80)
+                unloadButton.Position = UDim2.new(0, -140, 0, -75)
+                unloadButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
+                unloadButton.BorderSizePixel = 0
+                unloadButton.TextSize = 14
+                unloadButton.TextColor3 = Color3.fromRGB(255,255,255)
+                unloadButton.Parent = settingsFrame
+
+                local unloadCorner = Instance.new("UICorner")
+                unloadCorner.CornerRadius = UDim.new(0,10)
+                unloadCorner.Parent = unloadButton
+
+                unloadButton.MouseButton1Click:Connect(function()
+                    if screenGui then
+                        screenGui:Destroy()
+                    end
+                end)
+
+                local keepSentinelButton = Instance.new("TextButton")
+                keepSentinelButton.Name = "KeepSentinelButton"
+                keepSentinelButton.Text = "Keep Sentinel Hub: Yes"
+                keepSentinelButton.Size = UDim2.new(0, 200, 0, 80)
+                keepSentinelButton.Position = UDim2.new(0, 80, 0, -75)
+                keepSentinelButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
+                keepSentinelButton.BorderSizePixel = 0
+                keepSentinelButton.TextSize = 13
+                keepSentinelButton.TextColor3 = Color3.fromRGB(255,255,255)
+                keepSentinelButton.Parent = settingsFrame
+
+                local keepSentinelCorner = Instance.new("UICorner")
+                keepSentinelCorner.CornerRadius = UDim.new(0,10)
+                keepSentinelCorner.Parent = keepSentinelButton
+
+                keepSentinelButton.MouseButton1Click:Connect(function()
+                    isSentinelKept = not isSentinelKept
+                    if isSentinelKept then
+                        keepSentinelButton.Text = "Keep Sentinel Hub: Yes"
+                    else
+                        keepSentinelButton.Text = "Keep Sentinel Hub: No"
+                    end
+                end)
+
+                local menuButton = Instance.new("TextButton")
+                menuButton.Name = "MenuButton"
+                menuButton.Text = "Menu\nKey: ..."
+                menuButton.Size = UDim2.new(0, 200, 0, 80)
+                menuButton.Position = UDim2.new(0, -360, 0, -75)
+                menuButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
+                menuButton.BorderSizePixel = 0
+                menuButton.TextSize = 14
+                menuButton.TextColor3 = Color3.fromRGB(255,255,255)
+                menuButton.Parent = settingsFrame
+
+                local menuCorner = Instance.new("UICorner")
+                menuCorner.CornerRadius = UDim.new(0,10)
+                menuCorner.Parent = menuButton
+
+                menuButton.MouseButton1Click:Connect(function()
+                    menuButton.Text = "Press a key..."
+                    isBindingMenuKey = true
+                    ignoreMenuToggleAfterBinding = true
+                    local connection
+                    connection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                        if not gameProcessed and input.UserInputType == Enum.UserInputType.Keyboard then
+                            menuKeyBind = input.KeyCode
+                            menuButton.Text = "Menu\nKey: " .. menuKeyBind.Name
+                            isBindingMenuKey = false
+                            lastMenuBindTime = tick()
+                            connection:Disconnect()
+                            task.defer(function()
+                                ignoreMenuToggleAfterBinding = false
+                            end)
+                        end
+                    end)
+                end)
+            end
+            settingsFrame.Visible = true
+            topBarLabel.Text = "Settings"
+        else
+            local sectionFrame = contentFrame:FindFirstChild(buttonText .. "Frame")
+            if not sectionFrame then
+                sectionFrame = Instance.new("Frame")
+                sectionFrame.Name = buttonText .. "Frame"
+                sectionFrame.Size = UDim2.new(1, 0, 1, 0)
+                sectionFrame.BackgroundTransparency = 1
+                sectionFrame.Parent = contentFrame
+            end
+            topBarLabel.Text = buttonText
+            sectionFrame.Visible = true
+        end
+    end)
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then
+        return
+    end
+end)
+
+CryptonButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Crypton/main/Source"))()
+    end)
+end)
+
+IYButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+    end)
+end)
+
+YARHMButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-YARHM-12403"))()
+    end)
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed or isBindingMenuKey or ignoreMenuToggleAfterBinding then
+        return
+    end
+    if menuKeyBind and input.KeyCode == menuKeyBind then
+        setMenuOpen(not menuFrame.Visible)
+    end
+end)
