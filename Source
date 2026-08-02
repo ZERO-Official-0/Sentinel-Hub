@@ -459,6 +459,7 @@ for buttonText, sectionButton in pairs(sectionButtons) do
             DanyadsFlingButton.Visible = true
             AntiFlingButton.Visible = true
             NoClipButton.Visible = true
+            FlyButton.Visible = true
             topBarLabel.Text = "Main"
         elseif buttonText == "MM2" then
             local mm2Frame = contentFrame:FindFirstChild("MM2Frame")
@@ -478,7 +479,7 @@ for buttonText, sectionButton in pairs(sectionButtons) do
                 YARHMButton.BorderSizePixel = 0
                 YARHMButton.TextSize = 14
                 YARHMButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-                YARHMButton.Parent = contentFrame
+                YARHMButton.Parent = mm2Frame
 
                 local YARHMCorner = Instance.new("UICorner")
                 YARHMCorner.CornerRadius = UDim.new(0, 10)
