@@ -186,6 +186,21 @@ local TouchFlingCorner = Instance.new("UICorner")
 TouchFlingCorner.CornerRadius = UDim.new(0, 10)
 TouchFlingCorner.Parent = TouchFlingButton
 
+local DanyadsFlingButton = Instance.new("TextButton")
+DanyadsFlingButton.Name = "DanyadsFlingButton"
+DanyadsFlingButton.Text = "Danyad's Fling\n(Permanent)"
+DanyadsFlingButton.Size = UDim2.new(0, 200, 0, 80)
+DanyadsFlingButton.Position = UDim2.new(0, 300, 0, -75)
+DanyadsFlingButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+DanyadsFlingButton.BorderSizePixel = 0
+DanyadsFlingButton.TextSize = 14
+DanyadsFlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+DanyadsFlingButton.Parent = contentFrame
+
+local DanyadsFlingCorner = Instance.new("UICorner")
+DanyadsFlingCorner.CornerRadius = UDim.new(0, 10)
+DanyadsFlingCorner.Parent = DanyadsFlingButton
+
 local sectionButtonTexts = {
     "Main",
     "Skibidi",
@@ -296,6 +311,7 @@ for buttonText, sectionButton in pairs(sectionButtons) do
             CryptonButton.Visible = true
             IYButton.Visible = true
             TouchFlingButton.Visible = true
+            DanyadsFlingButton.Visible = true
             topBarLabel.Text = "Main"
         elseif buttonText == "MM2" then
             local mm2Frame = contentFrame:FindFirstChild("MM2Frame")
@@ -455,6 +471,12 @@ end)
 TouchFlingButton.MouseButton1Click:Connect(function()
     pcall(function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Touch-Fling/main/Source"))()
+    end)
+end)
+
+DanyadsFlingButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/danyad22/Fling/refs/heads/main/main.lua"))()
     end)
 end)
 
