@@ -370,6 +370,10 @@ for buttonText, sectionButton in pairs(sectionButtons) do
                 unloadCorner.Parent = unloadButton
 
                 unloadButton.MouseButton1Click:Connect(function()
+                    isSentinelKept = false
+                    if queueteleport then
+                        queueteleport("")
+                    end
                     if screenGui then
                         screenGui:Destroy()
                     end
