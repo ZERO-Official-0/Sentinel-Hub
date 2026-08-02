@@ -269,11 +269,26 @@ local CryptonCorner = Instance.new("UICorner")
 CryptonCorner.CornerRadius = UDim.new(0, 10)
 CryptonCorner.Parent = CryptonButton
 
+local EmoteButton = Instance.new("TextButton")
+EmoteButton.Name = "EmoteButton"
+EmoteButton.Text = "Emote\nMenu"
+EmoteButton.Size = UDim2.new(0, 200, 0, 80)
+EmoteButton.Position = UDim2.new(0, 113, 0, -75)
+EmoteButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+EmoteButton.BorderSizePixel = 0
+EmoteButton.TextSize = 14
+EmoteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+EmoteButton.Parent = contentFrame
+
+local EmoteCorner = Instance.new("UICorner")
+EmoteCorner.CornerRadius = UDim.new(0, 10)
+EmoteCorner.Parent = EmoteButton
+
 local TouchFlingButton = Instance.new("TextButton")
 TouchFlingButton.Name = "TouchFlingButton"
 TouchFlingButton.Text = "Touch Fling"
 TouchFlingButton.Size = UDim2.new(0, 200, 0, 80)
-TouchFlingButton.Position = UDim2.new(0, 113, 0, -75)
+TouchFlingButton.Position = UDim2.new(0, 333, 0, -75)
 TouchFlingButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 TouchFlingButton.BorderSizePixel = 0
 TouchFlingButton.TextSize = 14
@@ -284,26 +299,26 @@ local TouchFlingCorner = Instance.new("UICorner")
 TouchFlingCorner.CornerRadius = UDim.new(0, 10)
 TouchFlingCorner.Parent = TouchFlingButton
 
-local DanyadsFlingButton = Instance.new("TextButton")
-DanyadsFlingButton.Name = "DanyadsFlingButton"
-DanyadsFlingButton.Text = "Danyad's Fling\n(Permanent)"
-DanyadsFlingButton.Size = UDim2.new(0, 200, 0, 80)
-DanyadsFlingButton.Position = UDim2.new(0, 333, 0, -75)
-DanyadsFlingButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-DanyadsFlingButton.BorderSizePixel = 0
-DanyadsFlingButton.TextSize = 14
-DanyadsFlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-DanyadsFlingButton.Parent = contentFrame
+local LoopFlingButton = Instance.new("TextButton")
+LoopFlingButton.Name = "LoopFlingButton"
+LoopFlingButton.Text = "Loop Fling Menu"
+LoopFlingButton.Size = UDim2.new(0, 200, 0, 80)
+LoopFlingButton.Position = UDim2.new(0, 553, 0, -75)
+LoopFlingButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+LoopFlingButton.BorderSizePixel = 0
+LoopFlingButton.TextSize = 14
+LoopFlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+LoopFlingButton.Parent = contentFrame
 
-local DanyadsFlingCorner = Instance.new("UICorner")
-DanyadsFlingCorner.CornerRadius = UDim.new(0, 10)
-DanyadsFlingCorner.Parent = DanyadsFlingButton
+local LoopFlingCorner = Instance.new("UICorner")
+LoopFlingCorner.CornerRadius = UDim.new(0, 10)
+LoopFlingCorner.Parent = LoopFlingButton
 
 local AntiFlingButton = Instance.new("TextButton")
 AntiFlingButton.Name = "AntiFlingButton"
 AntiFlingButton.Text = "Anti Fling: Off"
 AntiFlingButton.Size = UDim2.new(0, 200, 0, 80)
-AntiFlingButton.Position = UDim2.new(0, 553, 0, -75)
+AntiFlingButton.Position = UDim2.new(0, 773, 0, -75)
 AntiFlingButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 AntiFlingButton.BorderSizePixel = 0
 AntiFlingButton.TextSize = 14
@@ -314,26 +329,26 @@ local AntiFlingCorner = Instance.new("UICorner")
 AntiFlingCorner.CornerRadius = UDim.new(0, 10)
 AntiFlingCorner.Parent = AntiFlingButton
 
-local NoClipButton = Instance.new("TextButton")
-NoClipButton.Name = "NoClipButton"
-NoClipButton.Text = "No Clip: Off"
-NoClipButton.Size = UDim2.new(0, 200, 0, 80)
-NoClipButton.Position = UDim2.new(0, 773, 0, -75)
-NoClipButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-NoClipButton.BorderSizePixel = 0
-NoClipButton.TextSize = 14
-NoClipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-NoClipButton.Parent = contentFrame
+local DanyadsFlingButton = Instance.new("TextButton")
+DanyadsFlingButton.Name = "DanyadsFlingButton"
+DanyadsFlingButton.Text = "Danyad's Fling\n(Permanent)"
+DanyadsFlingButton.Size = UDim2.new(0, 200, 0, 80)
+DanyadsFlingButton.Position = UDim2.new(0, -327, 0, 26)
+DanyadsFlingButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+DanyadsFlingButton.BorderSizePixel = 0
+DanyadsFlingButton.TextSize = 14
+DanyadsFlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+DanyadsFlingButton.Parent = contentFrame
 
-local NoClipCorner = Instance.new("UICorner")
-NoClipCorner.CornerRadius = UDim.new(0, 10)
-NoClipCorner.Parent = NoClipButton
+local DanyadsFlingCorner = Instance.new("UICorner")
+DanyadsFlingCorner.CornerRadius = UDim.new(0, 10)
+DanyadsFlingCorner.Parent = DanyadsFlingButton
 
 local FlyButton = Instance.new("TextButton")
 FlyButton.Name = "FlyButton"
 FlyButton.Text = "Fly"
 FlyButton.Size = UDim2.new(0, 200, 0, 80)
-FlyButton.Position = UDim2.new(0, -327, 0, 26)
+FlyButton.Position = UDim2.new(0, -107, 0, 26)
 FlyButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 FlyButton.BorderSizePixel = 0
 FlyButton.TextSize = 14
@@ -343,6 +358,66 @@ FlyButton.Parent = contentFrame
 local FlyCorner = Instance.new("UICorner")
 FlyCorner.CornerRadius = UDim.new(0, 10)
 FlyCorner.Parent = FlyButton
+
+local SpeedButton = Instance.new("TextButton")
+SpeedButton.Name = "SpeedButton"
+SpeedButton.Text = "Speed Hack"
+SpeedButton.Size = UDim2.new(0, 200, 0, 80)
+SpeedButton.Position = UDim2.new(0, 113, 0, 26)
+SpeedButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SpeedButton.BorderSizePixel = 0
+SpeedButton.TextSize = 14
+SpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedButton.Parent = contentFrame
+
+local SpeedCorner = Instance.new("UICorner")
+SpeedCorner.CornerRadius = UDim.new(0, 10)
+SpeedCorner.Parent = SpeedButton
+
+local SimpleAdminMenuButton = Instance.new("TextButton")
+SimpleAdminMenuButton.Name = "SimpleAdminMenuButton"
+SimpleAdminMenuButton.Text = "Simple Admin\nMenu"
+SimpleAdminMenuButton.Size = UDim2.new(0, 200, 0, 80)
+SimpleAdminMenuButton.Position = UDim2.new(0, 333, 0, 26)
+SimpleAdminMenuButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SimpleAdminMenuButton.BorderSizePixel = 0
+SimpleAdminMenuButton.TextSize = 14
+SimpleAdminMenuButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SimpleAdminMenuButton.Parent = contentFrame
+
+local SimpleAdminMenuCorner = Instance.new("UICorner")
+SimpleAdminMenuCorner.CornerRadius = UDim.new(0, 10)
+SimpleAdminMenuCorner.Parent = SimpleAdminMenuButton
+
+local NameSpooferButton = Instance.new("TextButton")
+NameSpooferButton.Name = "NameSpooferButton"
+NameSpooferButton.Text = "Name Spoofer"
+NameSpooferButton.Size = UDim2.new(0, 200, 0, 80)
+NameSpooferButton.Position = UDim2.new(0, 553, 0, 26)
+NameSpooferButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+NameSpooferButton.BorderSizePixel = 0
+NameSpooferButton.TextSize = 14
+NameSpooferButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+NameSpooferButton.Parent = contentFrame
+
+local NameSpooferCorner = Instance.new("UICorner")
+NameSpooferCorner.CornerRadius = UDim.new(0, 10)
+NameSpooferCorner.Parent = NameSpooferButton
+
+local NoClipButton = Instance.new("TextButton")
+NoClipButton.Name = "NoClipButton"
+NoClipButton.Text = "No Clip: Off"
+NoClipButton.Size = UDim2.new(0, 200, 0, 80)
+NoClipButton.Position = UDim2.new(0, 773, 0, 26)
+NoClipButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+NoClipButton.BorderSizePixel = 0
+NoClipButton.TextSize = 14
+NoClipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoClipButton.Parent = contentFrame
+
+local NoClipCorner = Instance.new("UICorner")
+NoClipCorner.CornerRadius = UDim.new(0, 10)
+NoClipCorner.Parent = NoClipButton
 
 local sectionButtonTexts = {
     "Main",
@@ -460,7 +535,65 @@ for buttonText, sectionButton in pairs(sectionButtons) do
             AntiFlingButton.Visible = true
             NoClipButton.Visible = true
             FlyButton.Visible = true
+            EmoteButton.Visible = true
+            LoopFlingButton.Visible = true
+            SpeedButton.Visible = true
+            NameSpooferButton.Visible = true
+            SimpleAdminMenuButton.Visible = true
             topBarLabel.Text = "Main"
+        elseif buttonText == "TSB" then
+            local tsbFrame = contentFrame:FindFirstChild("TSBFrame")
+            if not tsbFrame then
+                tsbFrame = Instance.new("Frame")
+                tsbFrame.Name = "TSBFrame"
+                tsbFrame.Size = UDim2.new(1, 0, 1, 0)
+                tsbFrame.BackgroundTransparency = 1
+                tsbFrame.Parent = contentFrame
+
+                local PhantasmButton = Instance.new("TextButton")
+                PhantasmButton.Name = "PhantasmButton"
+                PhantasmButton.Text = "Phantasm"
+                PhantasmButton.Size = UDim2.new(0, 200, 0, 80)
+                PhantasmButton.Position = UDim2.new(0, -327, 0, -75)
+                PhantasmButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                PhantasmButton.BorderSizePixel = 0
+                PhantasmButton.TextSize = 14
+                PhantasmButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                PhantasmButton.Parent = tsbFrame
+
+                local PhantasmCorner = Instance.new("UICorner")
+                PhantasmCorner.CornerRadius = UDim.new(0, 10)
+                PhantasmCorner.Parent = PhantasmButton
+
+                PhantasmButton.MouseButton1Click:Connect(function()
+                    pcall(function()
+                        loadstring(game:HttpGet('https://raw.githubusercontent.com/ATrainz/Phantasm/refs/heads/main/Games/TSB.lua'))()
+                    end)
+                end)
+
+                local DoviHubButton = Instance.new("TextButton")
+                DoviHubButton.Name = "DoviHubButton"
+                DoviHubButton.Text = "Dovi's Hub"
+                DoviHubButton.Size = UDim2.new(0, 200, 0, 80)
+                DoviHubButton.Position = UDim2.new(0, -107, 0, -75)
+                DoviHubButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                DoviHubButton.BorderSizePixel = 0
+                DoviHubButton.TextSize = 14
+                DoviHubButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                DoviHubButton.Parent = tsbFrame
+
+                local DoviHubCorner = Instance.new("UICorner")
+                DoviHubCorner.CornerRadius = UDim.new(0, 10)
+                DoviHubCorner.Parent = DoviHubButton
+
+                DoviHubButton.MouseButton1Click:Connect(function()
+                    pcall(function()
+                        loadstring(game:HttpGet("https://raw.githubusercontent.com/needanewphone32-eng/tsbfiles/refs/heads/main/Main1.lua"))()
+                    end)
+                end)
+            end
+            tsbFrame.Visible = true
+            topBarLabel.Text = buttonText
         elseif buttonText == "MM2" then
             local mm2Frame = contentFrame:FindFirstChild("MM2Frame")
             if not mm2Frame then
@@ -674,6 +807,36 @@ end)
 FlyButton.MouseButton1Click:Connect(function()
     pcall(function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Fly/main/Source"))()
+    end)
+end)
+
+EmoteButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Bac0nHck/Scripts/refs/heads/main/BundleAnimations.lua"))()
+    end)
+end)
+
+LoopFlingButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Loop-fling-all-247255"))()
+    end)
+end)
+
+SimpleAdminMenuButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://permanentdatabase.vercel.app/api/load?name=hub"))()
+    end)
+end)
+
+NameSpooferButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Anonymous-Name-72537"))()
+    end)
+end)
+
+SpeedButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Speed/main/Source"))()
     end)
 end)
 
