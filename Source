@@ -3,23 +3,114 @@
 -- ============================================
 
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local CoreGui = game:GetService("CoreGui")
+local Lighting = game:GetService("Lighting")
 local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
 
 local menuKeyBind = nil
 local isBindingMenuKey = false
 local ignoreMenuToggleAfterBinding = false
+local originalCollision = {}
+local isAntiFlingEnabled = false
+local antifling
+local isNoClipEnabled = false
+local NoClipconnection = nil
 local isSentinelKept = true
-local ScriptURL = `loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Sentinel-Hub/main/Source"))()`
+local ScriptURL = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Sentinel-Hub/main/Source"))()'
 
 game.Players.LocalPlayer.OnTeleport:Connect(function(State)
 	if isSentinelKept and queueteleport then
 		queueteleport(ScriptURL)
 	end
 end)
+
+local function enableAntiFling()
+    if antifling then return end
+
+    antifling = RunService.Stepped:Connect(function()
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= Players.LocalPlayer and player.Character then
+                for _, part in ipairs(player.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        if originalCollision[part] == nil then
+                            originalCollision[part] = part.CanCollide
+                        end
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end
+    end)
+end
+
+local function disableAntiFling()
+    if not antifling then return end
+    antifling:Disconnect()
+    antifling = nil
+    for part, originalState in pairs(originalCollision) do
+        if part.Parent then -- evita errori se la parte è stata distrutta
+            part.CanCollide = originalState
+        end
+    end
+    table.clear(originalCollision)
+end
+
+local function enableNoClip()
+    if NoClipconnection then
+        NoClipconnection:Disconnect()
+        NoClipconnection = nil
+    end
+    NoClipconnection = RunService.Stepped:Connect(function()
+        local character = game.Players.LocalPlayer.Character
+        if character then
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    if originalCollision[part] == nil then
+                        originalCollision[part] = part.CanCollide
+                    end
+                    part.CanCollide = false
+                end
+            end
+        end
+    end)
+end
+
+local function disableNoClip()
+    if NoClipconnection then
+        NoClipconnection:Disconnect()
+        NoClipconnection = nil
+    end
+    local character = game.Players.LocalPlayer.Character
+    if character then
+        for part, collide in pairs(originalCollision) do
+            if part and part.Parent then
+                part.CanCollide = collide
+            end
+        end
+    end
+    table.clear(originalCollision)
+end
+
+local features = {
+    AntiFling = {
+        enabled = function() return isAntiFlingEnabled end,
+        disable = function()
+            disableAntiFling()
+            isAntiFlingEnabled = false
+        end
+    },
+    NoClip = {
+        enabled = function() return isNoClipEnabled end,
+        disable = function()
+            disableNoClip()
+            isNoClipEnabled = false
+        end
+    }
+}
 
 -- ============================================
 -- UI CREATION
@@ -29,6 +120,11 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ModernMenuGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = CoreGui
+
+local menuBlur = Instance.new("BlurEffect")
+menuBlur.Name = "MenuBlur"
+menuBlur.Size = 0
+menuBlur.Parent = Lighting
 
 local menuFrame = Instance.new("Frame")
 menuFrame.Name = "ModernMenu"
@@ -59,8 +155,9 @@ topBarLabel.Parent = menuFrame
 local wardFrame = Instance.new("Frame")
 wardFrame.Name = "WardFrame"
 wardFrame.Size = UDim2.new(0.25, 0, 0.71, 0)
-wardFrame.Position = UDim2.new(menuFrame.Position.X.Scale, menuFrame.Position.X.Offset + 10, menuFrame.Position.Y.Scale, menuFrame.Position.Y.Offset + 60)
+wardFrame.Position = UDim2.new(0.375, 0, 0.11 + 0.06, 0)
 wardFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+wardFrame.BackgroundTransparency = 1
 wardFrame.BorderSizePixel = 0
 wardFrame.Visible = false
 wardFrame.ZIndex = 10
@@ -71,14 +168,15 @@ wardCorner.CornerRadius = UDim.new(0, 12)
 wardCorner.Parent = wardFrame
 
 local wardListLayout = Instance.new("UIListLayout")
-wardListLayout.Padding = UDim.new(0, 0)
+wardListLayout.Padding = UDim.new(0, 12)
 wardListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    wardListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 wardListLayout.Parent = wardFrame
 
 local wardPadding = Instance.new("UIPadding")
 wardPadding.PaddingLeft = UDim.new(0, 8)
 wardPadding.PaddingRight = UDim.new(0, 8)
-wardPadding.PaddingTop = UDim.new(0, 0)
+wardPadding.PaddingTop = UDim.new(0, 120)
 wardPadding.PaddingBottom = UDim.new(0, 0)
 wardPadding.Parent = wardFrame
 
@@ -143,9 +241,9 @@ hamburgerCorner.Parent = hamburgerButton
 
 local IYButton = Instance.new("TextButton")
 IYButton.Name = "IYButton"
-IYButton.Text = "IY (PC Only)"
+IYButton.Text = "Infinite\nYield\n(PC Only)"
 IYButton.Size = UDim2.new(0, 200, 0, 80)
-IYButton.Position = UDim2.new(0, -360, 0, -75)
+IYButton.Position = UDim2.new(0, -327, 0, -75)
 IYButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 IYButton.BorderSizePixel = 0
 IYButton.TextSize = 14
@@ -158,9 +256,9 @@ IYCorner.Parent = IYButton
 
 local CryptonButton = Instance.new("TextButton")
 CryptonButton.Name = "CryptonButton"
-CryptonButton.Text = "Crypton (PC Only)"
+CryptonButton.Text = "Crypton\n(PC Only)"
 CryptonButton.Size = UDim2.new(0, 200, 0, 80)
-CryptonButton.Position = UDim2.new(0, -140, 0, -75)
+CryptonButton.Position = UDim2.new(0, -107, 0, -75)
 CryptonButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 CryptonButton.BorderSizePixel = 0
 CryptonButton.TextSize = 14
@@ -175,7 +273,7 @@ local TouchFlingButton = Instance.new("TextButton")
 TouchFlingButton.Name = "TouchFlingButton"
 TouchFlingButton.Text = "Touch Fling"
 TouchFlingButton.Size = UDim2.new(0, 200, 0, 80)
-TouchFlingButton.Position = UDim2.new(0, 80, 0, -75)
+TouchFlingButton.Position = UDim2.new(0, 113, 0, -75)
 TouchFlingButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 TouchFlingButton.BorderSizePixel = 0
 TouchFlingButton.TextSize = 14
@@ -190,7 +288,7 @@ local DanyadsFlingButton = Instance.new("TextButton")
 DanyadsFlingButton.Name = "DanyadsFlingButton"
 DanyadsFlingButton.Text = "Danyad's Fling\n(Permanent)"
 DanyadsFlingButton.Size = UDim2.new(0, 200, 0, 80)
-DanyadsFlingButton.Position = UDim2.new(0, 300, 0, -75)
+DanyadsFlingButton.Position = UDim2.new(0, 333, 0, -75)
 DanyadsFlingButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 DanyadsFlingButton.BorderSizePixel = 0
 DanyadsFlingButton.TextSize = 14
@@ -201,10 +299,55 @@ local DanyadsFlingCorner = Instance.new("UICorner")
 DanyadsFlingCorner.CornerRadius = UDim.new(0, 10)
 DanyadsFlingCorner.Parent = DanyadsFlingButton
 
+local AntiFlingButton = Instance.new("TextButton")
+AntiFlingButton.Name = "AntiFlingButton"
+AntiFlingButton.Text = "Anti Fling: Off"
+AntiFlingButton.Size = UDim2.new(0, 200, 0, 80)
+AntiFlingButton.Position = UDim2.new(0, 553, 0, -75)
+AntiFlingButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+AntiFlingButton.BorderSizePixel = 0
+AntiFlingButton.TextSize = 14
+AntiFlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AntiFlingButton.Parent = contentFrame
+
+local AntiFlingCorner = Instance.new("UICorner")
+AntiFlingCorner.CornerRadius = UDim.new(0, 10)
+AntiFlingCorner.Parent = AntiFlingButton
+
+local NoClipButton = Instance.new("TextButton")
+NoClipButton.Name = "NoClipButton"
+NoClipButton.Text = "No Clip: Off"
+NoClipButton.Size = UDim2.new(0, 200, 0, 80)
+NoClipButton.Position = UDim2.new(0, 773, 0, -75)
+NoClipButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+NoClipButton.BorderSizePixel = 0
+NoClipButton.TextSize = 14
+NoClipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoClipButton.Parent = contentFrame
+
+local NoClipCorner = Instance.new("UICorner")
+NoClipCorner.CornerRadius = UDim.new(0, 10)
+NoClipCorner.Parent = NoClipButton
+
+local FlyButton = Instance.new("TextButton")
+FlyButton.Name = "FlyButton"
+FlyButton.Text = "Fly"
+FlyButton.Size = UDim2.new(0, 200, 0, 80)
+FlyButton.Position = UDim2.new(0, -327, 0, 26)
+FlyButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+FlyButton.BorderSizePixel = 0
+FlyButton.TextSize = 14
+FlyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlyButton.Parent = contentFrame
+
+local FlyCorner = Instance.new("UICorner")
+FlyCorner.CornerRadius = UDim.new(0, 10)
+FlyCorner.Parent = FlyButton
+
 local sectionButtonTexts = {
     "Main",
-    "Skibidi",
-    "Lesgosky",
+    "Others",
+    "TSB",
     "MM2",
     "Settings"
 }
@@ -214,9 +357,10 @@ for i, buttonText in ipairs(sectionButtonTexts) do
     local sectionButton = Instance.new("TextButton")
     sectionButton.Name = "SectionButton" .. i
     sectionButton.Text = buttonText
-    sectionButton.Size = UDim2.new(1, 0, 0.2, 0)
+    sectionButton.Size = UDim2.new(1.5, 0, 0.15, 0)
     sectionButton.BorderSizePixel = 0
     sectionButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    sectionButton.BackgroundTransparency = 0.01
     sectionButton.TextSize = 14
     sectionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     sectionButton.ZIndex = 11
@@ -278,6 +422,7 @@ end)
 local function setMenuOpen(isOpen)
     menuFrame.Visible = isOpen
     openButton.Visible = not isOpen
+    menuBlur.Size = isOpen and 18 or 0
     if not isOpen then
         wardFrame.Visible = false
     end
@@ -312,6 +457,8 @@ for buttonText, sectionButton in pairs(sectionButtons) do
             IYButton.Visible = true
             TouchFlingButton.Visible = true
             DanyadsFlingButton.Visible = true
+            AntiFlingButton.Visible = true
+            NoClipButton.Visible = true
             topBarLabel.Text = "Main"
         elseif buttonText == "MM2" then
             local mm2Frame = contentFrame:FindFirstChild("MM2Frame")
@@ -326,7 +473,7 @@ for buttonText, sectionButton in pairs(sectionButtons) do
                 YARHMButton.Name = "YARHMButton"
                 YARHMButton.Text = "YARHM"
                 YARHMButton.Size = UDim2.new(0, 200, 0, 80)
-                YARHMButton.Position = UDim2.new(0, -360, 0, -75)
+                YARHMButton.Position = UDim2.new(0, -327, 0, -75)
                 YARHMButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                 YARHMButton.BorderSizePixel = 0
                 YARHMButton.TextSize = 14
@@ -358,7 +505,7 @@ for buttonText, sectionButton in pairs(sectionButtons) do
                 unloadButton.Name = "UnloadButton"
                 unloadButton.Text = "Unload"
                 unloadButton.Size = UDim2.new(0, 200, 0, 80)
-                unloadButton.Position = UDim2.new(0, -140, 0, -75)
+                unloadButton.Position = UDim2.new(0, -107, 0, -75)
                 unloadButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
                 unloadButton.BorderSizePixel = 0
                 unloadButton.TextSize = 14
@@ -371,10 +518,17 @@ for buttonText, sectionButton in pairs(sectionButtons) do
 
                 unloadButton.MouseButton1Click:Connect(function()
                     isSentinelKept = false
+                    for _, feature in pairs(features) do
+                        if feature.enabled() then
+                            feature.disable()
+                        end
+                    end
                     if queueteleport then
                         queueteleport("")
                     end
                     if screenGui then
+                        menuBlur:Destroy()
+                        menuFrame:Destroy()
                         screenGui:Destroy()
                     end
                 end)
@@ -383,7 +537,7 @@ for buttonText, sectionButton in pairs(sectionButtons) do
                 keepSentinelButton.Name = "KeepSentinelButton"
                 keepSentinelButton.Text = "Keep Sentinel Hub: Yes"
                 keepSentinelButton.Size = UDim2.new(0, 200, 0, 80)
-                keepSentinelButton.Position = UDim2.new(0, 80, 0, -75)
+                keepSentinelButton.Position = UDim2.new(0, 113, 0, -75)
                 keepSentinelButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
                 keepSentinelButton.BorderSizePixel = 0
                 keepSentinelButton.TextSize = 13
@@ -407,7 +561,7 @@ for buttonText, sectionButton in pairs(sectionButtons) do
                 menuButton.Name = "MenuButton"
                 menuButton.Text = "Menu\nKey: ..."
                 menuButton.Size = UDim2.new(0, 200, 0, 80)
-                menuButton.Position = UDim2.new(0, -360, 0, -75)
+                menuButton.Position = UDim2.new(0, -327, 0, -75)
                 menuButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
                 menuButton.BorderSizePixel = 0
                 menuButton.TextSize = 14
@@ -484,6 +638,44 @@ DanyadsFlingButton.MouseButton1Click:Connect(function()
     end)
 end)
 
+AntiFlingButton.MouseButton1Click:Connect(function()
+    isAntiFlingEnabled = not isAntiFlingEnabled
+    if isNoClipEnabled then
+        disableNoClip()
+        isNoClipEnabled = false
+        NoClipButton.Text = "No Clip: Off"
+    end
+    if isAntiFlingEnabled then
+        enableAntiFling()
+        AntiFlingButton.Text = "Anti Fling: On"
+    else
+        disableAntiFling()
+        AntiFlingButton.Text = "Anti Fling: Off"
+    end
+end)
+
+NoClipButton.MouseButton1Click:Connect(function()
+    isNoClipEnabled = not isNoClipEnabled
+    if isAntiFlingEnabled then
+        disableAntiFling()
+        isAntiFlingEnabled = false
+        AntiFlingButton.Text = "Anti Fling: Off"
+    end
+    if isNoClipEnabled then
+        NoClipButton.Text = "No Clip: On"
+        enableNoClip()
+    else
+        NoClipButton.Text = "No Clip: Off"
+        disableNoClip()
+    end
+end)
+
+FlyButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Fly/main/Source"))()
+    end)
+end)
+
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed or isBindingMenuKey or ignoreMenuToggleAfterBinding then
         return
@@ -492,3 +684,17 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         setMenuOpen(not menuFrame.Visible)
     end
 end)
+
+local function disableAllFeatures()
+    if isAntiFlingEnabled then
+        disableAntiFling()
+        isAntiFlingEnabled = false
+        AntiFlingButton.Text = "Anti Fling: Off"
+    end
+
+    if isNoClipEnabled then
+        disableNoClip()
+        isNoClipEnabled = false
+        NoClipButton.Text = "No Clip: Off"
+    end
+end
