@@ -20,6 +20,8 @@ local antifling
 local isNoClipEnabled = false
 local NoClipconnection = nil
 local isSentinelKept = true
+local isInfJumping = false
+local InfJump
 local ScriptURL = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Sentinel-Hub/main/Source"))()'
 
 game.Players.LocalPlayer.OnTeleport:Connect(function(State)
@@ -95,6 +97,51 @@ local function disableNoClip()
     table.clear(originalCollision)
 end
 
+local function enableInfJump()
+    if InfJump then return end
+
+    InfJump = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then
+            return
+        end
+
+        if input.KeyCode ~= Enum.KeyCode.Space then
+            return
+        end
+
+        local character = player.Character
+        if not character then
+            return
+        end
+
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if not humanoid or humanoid.Health <= 0 then
+            return
+        end
+
+        if humanoid:GetState() == Enum.HumanoidStateType.Dead then
+            return
+        end
+
+        -- Force a jump every time space is pressed, even while already in the air.
+        humanoid.Jump = false
+        humanoid.Jump = true
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+
+        task.delay(0.05, function()
+            if character and character.Parent and humanoid.Parent == character and humanoid.Health > 0 then
+                humanoid.Jump = false
+            end
+        end)
+    end)
+end
+
+local function disableInfJump()
+    if not InfJump then return end
+    InfJump:Disconnect()
+    InfJump = nil
+end
+
 local features = {
     AntiFling = {
         enabled = function() return isAntiFlingEnabled end,
@@ -108,6 +155,13 @@ local features = {
         disable = function()
             disableNoClip()
             isNoClipEnabled = false
+        end
+    },
+    InfJump = {
+        enabled = function() return isInfJumping end,
+        disable = function()
+            disableInfJump()
+            isInfJumping = false
         end
     }
 }
@@ -419,6 +473,81 @@ local NoClipCorner = Instance.new("UICorner")
 NoClipCorner.CornerRadius = UDim.new(0, 10)
 NoClipCorner.Parent = NoClipButton
 
+local SSHubButton = Instance.new("TextButton")
+SSHubButton.Name = "67HubButton"
+SSHubButton.Text = "67Hub"
+SSHubButton.Size = UDim2.new(0, 200, 0, 80)
+SSHubButton.Position = UDim2.new(0, -327, 0, 134)
+SSHubButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SSHubButton.BorderSizePixel = 0
+SSHubButton.TextSize = 14
+SSHubButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SSHubButton.Parent = contentFrame
+
+local SSHubCorner = Instance.new("UICorner")
+SSHubCorner.CornerRadius = UDim.new(0, 10)
+SSHubCorner.Parent = SSHubButton
+
+local InvincibleFlyButton = Instance.new("TextButton")
+InvincibleFlyButton.Name = "InvincibleFlyButton"
+InvincibleFlyButton.Text = "Invincible Fly"
+InvincibleFlyButton.Size = UDim2.new(0, 200, 0, 80)
+InvincibleFlyButton.Position = UDim2.new(0, -107, 0, 134)
+InvincibleFlyButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+InvincibleFlyButton.BorderSizePixel = 0
+InvincibleFlyButton.TextSize = 14
+InvincibleFlyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+InvincibleFlyButton.Parent = contentFrame
+
+local InvincibleFlyCorner = Instance.new("UICorner")
+InvincibleFlyCorner.CornerRadius = UDim.new(0, 10)
+InvincibleFlyCorner.Parent = InvincibleFlyButton
+
+local InfJumpButton = Instance.new("TextButton")
+InfJumpButton.Name = "InfJumpButton"
+InfJumpButton.Text = "Infinite Jump: Off"
+InfJumpButton.Size = UDim2.new(0, 200, 0, 80)
+InfJumpButton.Position = UDim2.new(0, 113, 0, 134)
+InfJumpButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+InfJumpButton.BorderSizePixel = 0
+InfJumpButton.TextSize = 14
+InfJumpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+InfJumpButton.Parent = contentFrame
+
+local InfJumpCorner = Instance.new("UICorner")
+InfJumpCorner.CornerRadius = UDim.new(0, 10)
+InfJumpCorner.Parent = InfJumpButton
+
+local TPToolButton = Instance.new("TextButton")
+TPToolButton.Name = "TPToolButton"
+TPToolButton.Text = "TP Tool"
+TPToolButton.Size = UDim2.new(0, 200, 0, 80)
+TPToolButton.Position = UDim2.new(0, 333, 0, 134)
+TPToolButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+TPToolButton.BorderSizePixel = 0
+TPToolButton.TextSize = 14
+TPToolButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TPToolButton.Parent = contentFrame
+
+local TPToolCorner = Instance.new("UICorner")
+TPToolCorner.CornerRadius = UDim.new(0, 10)
+TPToolCorner.Parent = TPToolButton
+
+local SpectateButton = Instance.new("TextButton")
+SpectateButton.Name = "SpectateButton"
+SpectateButton.Text = "Spectate Tool"
+SpectateButton.Size = UDim2.new(0, 200, 0, 80)
+SpectateButton.Position = UDim2.new(0, 553, 0, 134)
+SpectateButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SpectateButton.BorderSizePixel = 0
+SpectateButton.TextSize = 14
+SpectateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpectateButton.Parent = contentFrame
+
+local SpectateCorner = Instance.new("UICorner")
+SpectateCorner.CornerRadius = UDim.new(0, 10)
+SpectateCorner.Parent = SpectateButton
+
 local sectionButtonTexts = {
     "Main",
     "Others",
@@ -540,6 +669,11 @@ for buttonText, sectionButton in pairs(sectionButtons) do
             SpeedButton.Visible = true
             NameSpooferButton.Visible = true
             SimpleAdminMenuButton.Visible = true
+            SSHubButton.Visible = true
+            InvincibleFlyButton.Visible = true
+            InfJumpButton.Visible = true
+            TPToolButton.Visible = true
+            SpectateButton.Visible = true
             topBarLabel.Text = "Main"
         elseif buttonText == "TSB" then
             local tsbFrame = contentFrame:FindFirstChild("TSBFrame")
@@ -804,6 +938,17 @@ NoClipButton.MouseButton1Click:Connect(function()
     end
 end)
 
+InfJumpButton.MouseButton1Click:Connect(function()
+    isInfJumping = not isInfJumping
+    if isInfJumping then
+        enableInfJump()
+        InfJumpButton.Text = "Infinite Jump: On"
+    else
+        disableInfJump()
+        InfJumpButton.Text = "Infinite Jump: Off"
+    end
+end)
+
 FlyButton.MouseButton1Click:Connect(function()
     pcall(function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Fly/main/Source"))()
@@ -840,6 +985,30 @@ SpeedButton.MouseButton1Click:Connect(function()
     end)
 end)
 
+SSHubButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/rchrak47-stack/67-Hub-by-Duke/refs/heads/main/67%20Hub"))()
+    end)
+end)
+
+InvincibleFlyButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Invincible-Fly/main/Source"))()
+    end)
+end)
+
+TPToolButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/TP-Tool/main/Source"))()
+    end)
+end)
+
+SpectateButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Spectate/main/Source"))()
+    end)
+end)
+
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed or isBindingMenuKey or ignoreMenuToggleAfterBinding then
         return
@@ -860,5 +1029,11 @@ local function disableAllFeatures()
         disableNoClip()
         isNoClipEnabled = false
         NoClipButton.Text = "No Clip: Off"
+    end
+
+    if isInfJumping then
+        disableInfJump()
+        isInfJumping = false
+        InfJumpButton.Text = "Infinite Jump: Off"
     end
 end
