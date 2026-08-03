@@ -548,6 +548,21 @@ local SpectateCorner = Instance.new("UICorner")
 SpectateCorner.CornerRadius = UDim.new(0, 10)
 SpectateCorner.Parent = SpectateButton
 
+local GoToButton = Instance.new("TextButton")
+GoToButton.Name = "GoToButton"
+GoToButton.Text = "Player TP Tool"
+GoToButton.Size = UDim2.new(0, 200, 0, 80)
+GoToButton.Position = UDim2.new(0, 773, 0, 134)
+GoToButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+GoToButton.BorderSizePixel = 0
+GoToButton.TextSize = 14
+GoToButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+GoToButton.Parent = contentFrame
+
+local GoToCorner = Instance.new("UICorner")
+GoToCorner.CornerRadius = UDim.new(0, 10)
+GoToCorner.Parent = GoToButton
+
 local sectionButtonTexts = {
     "Main",
     "Others",
@@ -674,6 +689,7 @@ for buttonText, sectionButton in pairs(sectionButtons) do
             InfJumpButton.Visible = true
             TPToolButton.Visible = true
             SpectateButton.Visible = true
+            GoToButton.Visible = true
             topBarLabel.Text = "Main"
         elseif buttonText == "TSB" then
             local tsbFrame = contentFrame:FindFirstChild("TSBFrame")
@@ -1006,6 +1022,12 @@ end)
 SpectateButton.MouseButton1Click:Connect(function()
     pcall(function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Spectate/main/Source"))()
+    end)
+end)
+
+GoToButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/GoTo/main/Source"))()
     end)
 end)
 
