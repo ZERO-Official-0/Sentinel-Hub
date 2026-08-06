@@ -9,6 +9,7 @@ local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local CoreGui = game:GetService("CoreGui")
 local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
 local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
 
 local menuKeyBind = nil
@@ -22,6 +23,11 @@ local NoClipconnection = nil
 local isSentinelKept = true
 local isInfJumping = false
 local InfJump
+local saved = nil
+local isInfiniteZoomEnabled = false
+local isAirStrafeEnabled = false
+local isMomentumEnabled = false
+local isNoSlowEnabled = false
 local ScriptURL = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Sentinel-Hub/main/Source"))()'
 
 game.Players.LocalPlayer.OnTeleport:Connect(function(State)
@@ -29,6 +35,10 @@ game.Players.LocalPlayer.OnTeleport:Connect(function(State)
 		queueteleport(ScriptURL)
 	end
 end)
+
+-- ============================================
+-- FUNCTIONS
+-- ============================================
 
 local function enableAntiFling()
     if antifling then return end
@@ -123,7 +133,6 @@ local function enableInfJump()
             return
         end
 
-        -- Force a jump every time space is pressed, even while already in the air.
         humanoid.Jump = false
         humanoid.Jump = true
         humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
@@ -141,6 +150,104 @@ local function disableInfJump()
     InfJump:Disconnect()
     InfJump = nil
 end
+
+local function EnableInfiniteZoom()
+	if isInfiniteZoomEnabled then return end
+	isInfiniteZoomEnabled = true
+	if not saved then
+		saved = {
+			min = player.CameraMinZoomDistance,
+			max = player.CameraMaxZoomDistance,
+		}
+	end
+	player.CameraMinZoomDistance = 0
+	player.CameraMaxZoomDistance = 1e9
+end
+
+local function DisableInfiniteZoom()
+	if not isInfiniteZoomEnabled then return end
+	isInfiniteZoomEnabled = false
+	if saved then
+		player.CameraMinZoomDistance = saved.min
+		player.CameraMaxZoomDistance = saved.max
+	else
+		player.CameraMinZoomDistance = 0.5
+		player.CameraMaxZoomDistance = 400
+	end
+	saved = nil
+end
+
+local function ToggleAirStrafe()
+    isAirStrafeEnabled = not isAirStrafeEnabled
+end
+
+local function ToggleMomentum()
+    isMomentumEnabled = not isMomentumEnabled
+end
+
+local function ToggleNoSlow()
+    isNoSlowEnabled = not isNoSlowEnabled
+end
+
+local function isAirborne(humanoid)
+    local state = humanoid:GetState()
+    return state == Enum.HumanoidStateType.Freefall
+        or state == Enum.HumanoidStateType.FallingDown
+        or state == Enum.HumanoidStateType.Falling
+        or state == Enum.HumanoidStateType.Jumping
+        or state == Enum.HumanoidStateType.PlatformPound
+end
+
+local function onCharacterAdded(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    local rootPart = character:WaitForChild("HumanoidRootPart")
+    RunService.Heartbeat:Connect(function()
+        if not humanoid or not rootPart then return end
+        if isAirStrafeEnabled and (isMomentumEnabled or isNoSlowEnabled) then
+            local moveDir = humanoid.MoveDirection
+            if moveDir.Magnitude > 0.1 then
+                local horizontal = Vector3.new(moveDir.X, 0, moveDir.Z)
+                if horizontal.Magnitude > 0 then
+                    horizontal = horizontal.Unit
+                    local desiredVelocity = horizontal * humanoid.WalkSpeed
+                    rootPart.Velocity = Vector3.new(desiredVelocity.X, rootPart.Velocity.Y, desiredVelocity.Z)
+                end
+            else
+                rootPart.Velocity = Vector3.new(0, rootPart.Velocity.Y, 0)
+            end
+        end
+        if isAirStrafeEnabled and isAirborne(humanoid) then
+            local moveDir = humanoid.MoveDirection
+            if moveDir.Magnitude > 0.1 then
+                local horizontal = Vector3.new(moveDir.X, 0, moveDir.Z)
+                if horizontal.Magnitude > 0 then
+                    horizontal = horizontal.Unit
+                    local desiredVelocity = horizontal * humanoid.WalkSpeed
+                    rootPart.Velocity = Vector3.new(desiredVelocity.X, rootPart.Velocity.Y, desiredVelocity.Z)
+                end
+            else
+                rootPart.Velocity = Vector3.new(0, rootPart.Velocity.Y, 0)
+            end
+        end
+        if (isMomentumEnabled or isNoSlowEnabled) and humanoid.FloorMaterial ~= Enum.Material.Air then
+            local moveDir = humanoid.MoveDirection
+            if moveDir.Magnitude > 0.1 then
+                local horizontal = Vector3.new(moveDir.X, 0, moveDir.Z)
+                if horizontal.Magnitude > 0 then
+                    horizontal = horizontal.Unit
+                    local desiredVelocity = horizontal * humanoid.WalkSpeed
+                    rootPart.Velocity = Vector3.new(desiredVelocity.X, rootPart.Velocity.Y, desiredVelocity.Z)
+                end
+            else
+                rootPart.Velocity = Vector3.new(0, rootPart.Velocity.Y, 0)
+            end
+        end
+    end)
+end
+
+-- ============================================
+-- UNLOAD FEATURES
+-- ============================================
 
 local features = {
     AntiFling = {
@@ -163,7 +270,35 @@ local features = {
             disableInfJump()
             isInfJumping = false
         end
-    }
+    },
+    InfiniteZoom = {
+        enabled = function() return isInfiniteZoomEnabled end,
+        disable = function()
+            DisableInfiniteZoom()
+            isInfiniteZoomEnabled = false
+        end
+    },
+    AirStrafe = {
+        enabled = function() return isAirStrafeEnabled end,
+        disable = function()
+            DisableAirStrafe()
+            isAirStrafeEnabled = false
+        end
+    },
+    Momentum = {
+        enabled = function() return isMomentumEnabled end,
+        disable = function()
+            DisableMomentum()
+            isMomentumEnabled = false
+        end
+    },
+    NoSlow = {
+        enabled = function() return isNoSlowEnabled end,
+        disable = function()
+            DisableNoSlow()
+            isNoSlowEnabled = false
+        end
+    },
 }
 
 -- ============================================
@@ -197,13 +332,19 @@ menuCorner.Parent = menuFrame
 
 local topBarLabel = Instance.new("TextLabel")
 topBarLabel.Name = "TopBarLabel"
-topBarLabel.Size = UDim2.new(0.6, 0, 0, 30)
-topBarLabel.Position = UDim2.new(0.2, 0, 0, 18)
+topBarLabel.Size = UDim2.new(0.6, 0, 0.06, 0)
+topBarLabel.Position = UDim2.new(0.2, 0, 0.01, 0)
 topBarLabel.BackgroundTransparency = 1
 topBarLabel.Text = "Main"
 topBarLabel.TextColor3 = Color3.fromRGB(255,255,255)
 topBarLabel.TextScaled = true
+topBarLabel.TextWrapped = false
 topBarLabel.TextXAlignment = Enum.TextXAlignment.Center
+topBarLabel.TextYAlignment = Enum.TextYAlignment.Center
+local TopBarConstraint = Instance.new("UITextSizeConstraint")
+TopBarConstraint.MaxTextSize = 40
+TopBarConstraint.MinTextSize = 20
+TopBarConstraint.Parent = topBarLabel
 topBarLabel.Parent = menuFrame
 
 local wardFrame = Instance.new("Frame")
@@ -215,7 +356,7 @@ wardFrame.BackgroundTransparency = 1
 wardFrame.BorderSizePixel = 0
 wardFrame.Visible = false
 wardFrame.ZIndex = 10
-wardFrame.Parent = screenGui
+wardFrame.Parent = menuFrame
 
 local wardCorner = Instance.new("UICorner")
 wardCorner.CornerRadius = UDim.new(0, 12)
@@ -266,13 +407,19 @@ buttonCorner.Parent = openButton
 local closeButton = Instance.new("TextButton")
 closeButton.Name = "CloseButton"
 closeButton.Text = "X"
-closeButton.Size = UDim2.new(0, 36, 0, 36)
-closeButton.Position = UDim2.new(1, -46, 0, 14)
+closeButton.AnchorPoint = Vector2.new(1, 0)
+closeButton.Size = UDim2.new(0.036, 0, 0.036, 0)
+closeButton.Position = UDim2.new(0.99, 0, 0.015, 0)
 closeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 closeButton.BorderSizePixel = 0
 closeButton.TextSize = 24
 closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 closeButton.Parent = menuFrame
+
+local closeConstraint = Instance.new("UITextSizeConstraint")
+closeConstraint.MaxTextSize = 16
+closeConstraint.MinTextSize = 10
+closeConstraint.Parent = closeButton
 
 local closeCorner = Instance.new("UICorner")
 closeCorner.CornerRadius = UDim.new(0, 10)
@@ -281,13 +428,19 @@ closeCorner.Parent = closeButton
 local hamburgerButton = Instance.new("TextButton")
 hamburgerButton.Name = "HamburgerButton"
 hamburgerButton.Text = "Ξ"
-hamburgerButton.Size = UDim2.new(0, 40, 0, 40)
-hamburgerButton.Position = UDim2.new(0, 14, 0, 14)
+hamburgerButton.AnchorPoint = Vector2.new(0, 0)
+hamburgerButton.Size = UDim2.new(0.04, 0, 0.04, 0)
+hamburgerButton.Position = UDim2.new(0.01, 0, 0.015, 0)
 hamburgerButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 hamburgerButton.BorderSizePixel = 0
 hamburgerButton.TextSize = 24
 hamburgerButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 hamburgerButton.Parent = menuFrame
+
+local hamburgerConstraint = Instance.new("UITextSizeConstraint")
+hamburgerConstraint.MaxTextSize = 16
+hamburgerConstraint.MinTextSize = 10
+hamburgerConstraint.Parent = hamburgerButton
 
 local hamburgerCorner = Instance.new("UICorner")
 hamburgerCorner.CornerRadius = UDim.new(0, 10)
@@ -296,13 +449,20 @@ hamburgerCorner.Parent = hamburgerButton
 local IYButton = Instance.new("TextButton")
 IYButton.Name = "IYButton"
 IYButton.Text = "Infinite\nYield\n(PC Only)"
-IYButton.Size = UDim2.new(0, 200, 0, 80)
-IYButton.Position = UDim2.new(0, -327, 0, -75)
+IYButton.AnchorPoint = Vector2.new(0.5, 0.5)
+IYButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+IYButton.Position = UDim2.new(-0.365, 0, -0.05, 0)
 IYButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 IYButton.BorderSizePixel = 0
-IYButton.TextSize = 14
+IYButton.TextScaled = true
+IYButton.TextWrapped = true
 IYButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 IYButton.Parent = contentFrame
+
+local IYConstraint = Instance.new("UITextSizeConstraint")
+IYConstraint.MaxTextSize = 14
+IYConstraint.MinTextSize = 8
+IYConstraint.Parent = IYButton
 
 local IYCorner = Instance.new("UICorner")
 IYCorner.CornerRadius = UDim.new(0, 10)
@@ -311,13 +471,20 @@ IYCorner.Parent = IYButton
 local CryptonButton = Instance.new("TextButton")
 CryptonButton.Name = "CryptonButton"
 CryptonButton.Text = "Crypton\n(PC Only)"
-CryptonButton.Size = UDim2.new(0, 200, 0, 80)
-CryptonButton.Position = UDim2.new(0, -107, 0, -75)
+CryptonButton.AnchorPoint = Vector2.new(0.5, 0.5)
+CryptonButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+CryptonButton.Position = UDim2.new(-0.010, 0, -0.05, 0)
 CryptonButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 CryptonButton.BorderSizePixel = 0
-CryptonButton.TextSize = 14
+CryptonButton.TextScaled = true
+CryptonButton.TextWrapped = true
 CryptonButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 CryptonButton.Parent = contentFrame
+
+local CryptonConstraint = Instance.new("UITextSizeConstraint")
+CryptonConstraint.MaxTextSize = 14
+CryptonConstraint.MinTextSize = 8
+CryptonConstraint.Parent = CryptonButton
 
 local CryptonCorner = Instance.new("UICorner")
 CryptonCorner.CornerRadius = UDim.new(0, 10)
@@ -325,14 +492,21 @@ CryptonCorner.Parent = CryptonButton
 
 local EmoteButton = Instance.new("TextButton")
 EmoteButton.Name = "EmoteButton"
-EmoteButton.Text = "Emote\nMenu"
-EmoteButton.Size = UDim2.new(0, 200, 0, 80)
-EmoteButton.Position = UDim2.new(0, 113, 0, -75)
+EmoteButton.Text = "Emote Menu"
+EmoteButton.AnchorPoint = Vector2.new(0.5, 0.5)
+EmoteButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+EmoteButton.Position = UDim2.new(0.345, 0, -0.05, 0)
 EmoteButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 EmoteButton.BorderSizePixel = 0
-EmoteButton.TextSize = 14
+EmoteButton.TextScaled = true
+EmoteButton.TextWrapped = true
 EmoteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 EmoteButton.Parent = contentFrame
+
+local EmoteConstraint = Instance.new("UITextSizeConstraint")
+EmoteConstraint.MaxTextSize = 14
+EmoteConstraint.MinTextSize = 8
+EmoteConstraint.Parent = EmoteButton
 
 local EmoteCorner = Instance.new("UICorner")
 EmoteCorner.CornerRadius = UDim.new(0, 10)
@@ -341,13 +515,20 @@ EmoteCorner.Parent = EmoteButton
 local TouchFlingButton = Instance.new("TextButton")
 TouchFlingButton.Name = "TouchFlingButton"
 TouchFlingButton.Text = "Touch Fling"
-TouchFlingButton.Size = UDim2.new(0, 200, 0, 80)
-TouchFlingButton.Position = UDim2.new(0, 333, 0, -75)
+TouchFlingButton.AnchorPoint = Vector2.new(0.5, 0.5)
+TouchFlingButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+TouchFlingButton.Position = UDim2.new(0.70, 0, -0.05, 0)
 TouchFlingButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 TouchFlingButton.BorderSizePixel = 0
-TouchFlingButton.TextSize = 14
+TouchFlingButton.TextScaled = true
+TouchFlingButton.TextWrapped = true
 TouchFlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 TouchFlingButton.Parent = contentFrame
+
+local TouchFlingConstraint = Instance.new("UITextSizeConstraint")
+TouchFlingConstraint.MaxTextSize = 14
+TouchFlingConstraint.MinTextSize = 8
+TouchFlingConstraint.Parent = TouchFlingButton
 
 local TouchFlingCorner = Instance.new("UICorner")
 TouchFlingCorner.CornerRadius = UDim.new(0, 10)
@@ -355,14 +536,21 @@ TouchFlingCorner.Parent = TouchFlingButton
 
 local LoopFlingButton = Instance.new("TextButton")
 LoopFlingButton.Name = "LoopFlingButton"
-LoopFlingButton.Text = "Loop Fling Menu"
-LoopFlingButton.Size = UDim2.new(0, 200, 0, 80)
-LoopFlingButton.Position = UDim2.new(0, 553, 0, -75)
+LoopFlingButton.Text = "Loop Fling\nMenu"
+LoopFlingButton.AnchorPoint = Vector2.new(0.5, 0.5)
+LoopFlingButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+LoopFlingButton.Position = UDim2.new(1.055, 0, -0.05, 0)
 LoopFlingButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 LoopFlingButton.BorderSizePixel = 0
-LoopFlingButton.TextSize = 14
+LoopFlingButton.TextScaled = true
+LoopFlingButton.TextWrapped = true
 LoopFlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 LoopFlingButton.Parent = contentFrame
+
+local LoopFlingConstraint = Instance.new("UITextSizeConstraint")
+LoopFlingConstraint.MaxTextSize = 14
+LoopFlingConstraint.MinTextSize = 8
+LoopFlingConstraint.Parent = LoopFlingButton
 
 local LoopFlingCorner = Instance.new("UICorner")
 LoopFlingCorner.CornerRadius = UDim.new(0, 10)
@@ -371,13 +559,20 @@ LoopFlingCorner.Parent = LoopFlingButton
 local AntiFlingButton = Instance.new("TextButton")
 AntiFlingButton.Name = "AntiFlingButton"
 AntiFlingButton.Text = "Anti Fling: Off"
-AntiFlingButton.Size = UDim2.new(0, 200, 0, 80)
-AntiFlingButton.Position = UDim2.new(0, 773, 0, -75)
+AntiFlingButton.AnchorPoint = Vector2.new(0.5, 0.5)
+AntiFlingButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+AntiFlingButton.Position = UDim2.new(1.41, 0, -0.05, 0)
 AntiFlingButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 AntiFlingButton.BorderSizePixel = 0
-AntiFlingButton.TextSize = 14
+AntiFlingButton.TextScaled = true
+AntiFlingButton.TextWrapped = true
 AntiFlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 AntiFlingButton.Parent = contentFrame
+
+local AntiFlingConstraint = Instance.new("UITextSizeConstraint")
+AntiFlingConstraint.MaxTextSize = 14
+AntiFlingConstraint.MinTextSize = 8
+AntiFlingConstraint.Parent = AntiFlingButton
 
 local AntiFlingCorner = Instance.new("UICorner")
 AntiFlingCorner.CornerRadius = UDim.new(0, 10)
@@ -386,13 +581,20 @@ AntiFlingCorner.Parent = AntiFlingButton
 local DanyadsFlingButton = Instance.new("TextButton")
 DanyadsFlingButton.Name = "DanyadsFlingButton"
 DanyadsFlingButton.Text = "Danyad's Fling\n(Permanent)"
-DanyadsFlingButton.Size = UDim2.new(0, 200, 0, 80)
-DanyadsFlingButton.Position = UDim2.new(0, -327, 0, 26)
+DanyadsFlingButton.AnchorPoint = Vector2.new(0.5, 0.5)
+DanyadsFlingButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+DanyadsFlingButton.Position = UDim2.new(-0.365, 0, 0.1, 0)
 DanyadsFlingButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 DanyadsFlingButton.BorderSizePixel = 0
-DanyadsFlingButton.TextSize = 14
+DanyadsFlingButton.TextScaled = true
+DanyadsFlingButton.TextWrapped = true
 DanyadsFlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 DanyadsFlingButton.Parent = contentFrame
+
+local DanyadsFlingConstraint = Instance.new("UITextSizeConstraint")
+DanyadsFlingConstraint.MaxTextSize = 14
+DanyadsFlingConstraint.MinTextSize = 8
+DanyadsFlingConstraint.Parent = DanyadsFlingButton
 
 local DanyadsFlingCorner = Instance.new("UICorner")
 DanyadsFlingCorner.CornerRadius = UDim.new(0, 10)
@@ -401,13 +603,20 @@ DanyadsFlingCorner.Parent = DanyadsFlingButton
 local FlyButton = Instance.new("TextButton")
 FlyButton.Name = "FlyButton"
 FlyButton.Text = "Fly"
-FlyButton.Size = UDim2.new(0, 200, 0, 80)
-FlyButton.Position = UDim2.new(0, -107, 0, 26)
+FlyButton.AnchorPoint = Vector2.new(0.5, 0.5)
+FlyButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+FlyButton.Position = UDim2.new(-0.010, 0, 0.1, 0)
 FlyButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 FlyButton.BorderSizePixel = 0
-FlyButton.TextSize = 14
+FlyButton.TextScaled = true
+FlyButton.TextWrapped = true
 FlyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 FlyButton.Parent = contentFrame
+
+local FlyConstraint = Instance.new("UITextSizeConstraint")
+FlyConstraint.MaxTextSize = 14
+FlyConstraint.MinTextSize = 8
+FlyConstraint.Parent = FlyButton
 
 local FlyCorner = Instance.new("UICorner")
 FlyCorner.CornerRadius = UDim.new(0, 10)
@@ -416,13 +625,20 @@ FlyCorner.Parent = FlyButton
 local SpeedButton = Instance.new("TextButton")
 SpeedButton.Name = "SpeedButton"
 SpeedButton.Text = "Speed Hack"
-SpeedButton.Size = UDim2.new(0, 200, 0, 80)
-SpeedButton.Position = UDim2.new(0, 113, 0, 26)
+SpeedButton.AnchorPoint = Vector2.new(0.5, 0.5)
+SpeedButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+SpeedButton.Position = UDim2.new(0.345, 0, 0.1, 0)
 SpeedButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 SpeedButton.BorderSizePixel = 0
-SpeedButton.TextSize = 14
+SpeedButton.TextScaled = true
+SpeedButton.TextWrapped = true
 SpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 SpeedButton.Parent = contentFrame
+
+local SpeedConstraint = Instance.new("UITextSizeConstraint")
+SpeedConstraint.MaxTextSize = 14
+SpeedConstraint.MinTextSize = 8
+SpeedConstraint.Parent = SpeedButton
 
 local SpeedCorner = Instance.new("UICorner")
 SpeedCorner.CornerRadius = UDim.new(0, 10)
@@ -431,13 +647,20 @@ SpeedCorner.Parent = SpeedButton
 local SimpleAdminMenuButton = Instance.new("TextButton")
 SimpleAdminMenuButton.Name = "SimpleAdminMenuButton"
 SimpleAdminMenuButton.Text = "Simple Admin\nMenu"
-SimpleAdminMenuButton.Size = UDim2.new(0, 200, 0, 80)
-SimpleAdminMenuButton.Position = UDim2.new(0, 333, 0, 26)
+SimpleAdminMenuButton.AnchorPoint = Vector2.new(0.5, 0.5)
+SimpleAdminMenuButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+SimpleAdminMenuButton.Position = UDim2.new(0.700, 0, 0.1, 0)
 SimpleAdminMenuButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 SimpleAdminMenuButton.BorderSizePixel = 0
-SimpleAdminMenuButton.TextSize = 14
+SimpleAdminMenuButton.TextScaled = true
+SimpleAdminMenuButton.TextWrapped = true
 SimpleAdminMenuButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 SimpleAdminMenuButton.Parent = contentFrame
+
+local SimpleAdminMenuConstraint = Instance.new("UITextSizeConstraint")
+SimpleAdminMenuConstraint.MaxTextSize = 14
+SimpleAdminMenuConstraint.MinTextSize = 8
+SimpleAdminMenuConstraint.Parent = SimpleAdminMenuButton
 
 local SimpleAdminMenuCorner = Instance.new("UICorner")
 SimpleAdminMenuCorner.CornerRadius = UDim.new(0, 10)
@@ -446,13 +669,20 @@ SimpleAdminMenuCorner.Parent = SimpleAdminMenuButton
 local NameSpooferButton = Instance.new("TextButton")
 NameSpooferButton.Name = "NameSpooferButton"
 NameSpooferButton.Text = "Name Spoofer"
-NameSpooferButton.Size = UDim2.new(0, 200, 0, 80)
-NameSpooferButton.Position = UDim2.new(0, 553, 0, 26)
+NameSpooferButton.AnchorPoint = Vector2.new(0.5, 0.5)
+NameSpooferButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+NameSpooferButton.Position = UDim2.new(1.055, 0, 0.1, 0)
 NameSpooferButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 NameSpooferButton.BorderSizePixel = 0
-NameSpooferButton.TextSize = 14
+NameSpooferButton.TextScaled = true
+NameSpooferButton.TextWrapped = true
 NameSpooferButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 NameSpooferButton.Parent = contentFrame
+
+local NameSpooferConstraint = Instance.new("UITextSizeConstraint")
+NameSpooferConstraint.MaxTextSize = 14
+NameSpooferConstraint.MinTextSize = 8
+NameSpooferConstraint.Parent = NameSpooferButton
 
 local NameSpooferCorner = Instance.new("UICorner")
 NameSpooferCorner.CornerRadius = UDim.new(0, 10)
@@ -461,13 +691,20 @@ NameSpooferCorner.Parent = NameSpooferButton
 local NoClipButton = Instance.new("TextButton")
 NoClipButton.Name = "NoClipButton"
 NoClipButton.Text = "No Clip: Off"
-NoClipButton.Size = UDim2.new(0, 200, 0, 80)
-NoClipButton.Position = UDim2.new(0, 773, 0, 26)
+NoClipButton.AnchorPoint = Vector2.new(0.5, 0.5)
+NoClipButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+NoClipButton.Position = UDim2.new(1.410, 0, 0.1, 0)
 NoClipButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 NoClipButton.BorderSizePixel = 0
-NoClipButton.TextSize = 14
+NoClipButton.TextScaled = true
+NoClipButton.TextWrapped = true
 NoClipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 NoClipButton.Parent = contentFrame
+
+local NoClipConstraint = Instance.new("UITextSizeConstraint")
+NoClipConstraint.MaxTextSize = 14
+NoClipConstraint.MinTextSize = 8
+NoClipConstraint.Parent = NoClipButton
 
 local NoClipCorner = Instance.new("UICorner")
 NoClipCorner.CornerRadius = UDim.new(0, 10)
@@ -476,13 +713,20 @@ NoClipCorner.Parent = NoClipButton
 local SSHubButton = Instance.new("TextButton")
 SSHubButton.Name = "67HubButton"
 SSHubButton.Text = "67Hub"
-SSHubButton.Size = UDim2.new(0, 200, 0, 80)
-SSHubButton.Position = UDim2.new(0, -327, 0, 134)
+SSHubButton.AnchorPoint = Vector2.new(0.5, 0.5)
+SSHubButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+SSHubButton.Position = UDim2.new(-0.365, 0, 0.25, 0)
 SSHubButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 SSHubButton.BorderSizePixel = 0
-SSHubButton.TextSize = 14
+SSHubButton.TextScaled = true
+SSHubButton.TextWrapped = true
 SSHubButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 SSHubButton.Parent = contentFrame
+
+local SSHubConstraint = Instance.new("UITextSizeConstraint")
+SSHubConstraint.MaxTextSize = 14
+SSHubConstraint.MinTextSize = 8
+SSHubConstraint.Parent = SSHubButton
 
 local SSHubCorner = Instance.new("UICorner")
 SSHubCorner.CornerRadius = UDim.new(0, 10)
@@ -491,13 +735,20 @@ SSHubCorner.Parent = SSHubButton
 local InvincibleFlyButton = Instance.new("TextButton")
 InvincibleFlyButton.Name = "InvincibleFlyButton"
 InvincibleFlyButton.Text = "Invincible Fly"
-InvincibleFlyButton.Size = UDim2.new(0, 200, 0, 80)
-InvincibleFlyButton.Position = UDim2.new(0, -107, 0, 134)
+InvincibleFlyButton.AnchorPoint = Vector2.new(0.5, 0.5)
+InvincibleFlyButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+InvincibleFlyButton.Position = UDim2.new(-0.010, 0, 0.25, 0)
 InvincibleFlyButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 InvincibleFlyButton.BorderSizePixel = 0
-InvincibleFlyButton.TextSize = 14
+InvincibleFlyButton.TextScaled = true
+InvincibleFlyButton.TextWrapped = true
 InvincibleFlyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 InvincibleFlyButton.Parent = contentFrame
+
+local InvincibleFlyConstraint = Instance.new("UITextSizeConstraint")
+InvincibleFlyConstraint.MaxTextSize = 14
+InvincibleFlyConstraint.MinTextSize = 8
+InvincibleFlyConstraint.Parent = InvincibleFlyButton
 
 local InvincibleFlyCorner = Instance.new("UICorner")
 InvincibleFlyCorner.CornerRadius = UDim.new(0, 10)
@@ -506,13 +757,20 @@ InvincibleFlyCorner.Parent = InvincibleFlyButton
 local InfJumpButton = Instance.new("TextButton")
 InfJumpButton.Name = "InfJumpButton"
 InfJumpButton.Text = "Infinite Jump: Off"
-InfJumpButton.Size = UDim2.new(0, 200, 0, 80)
-InfJumpButton.Position = UDim2.new(0, 113, 0, 134)
+InfJumpButton.AnchorPoint = Vector2.new(0.5, 0.5)
+InfJumpButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+InfJumpButton.Position = UDim2.new(0.345, 0, 0.25, 0)
 InfJumpButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 InfJumpButton.BorderSizePixel = 0
-InfJumpButton.TextSize = 14
+InfJumpButton.TextScaled = true
+InfJumpButton.TextWrapped = true
 InfJumpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 InfJumpButton.Parent = contentFrame
+
+local InfJumpConstraint = Instance.new("UITextSizeConstraint")
+InfJumpConstraint.MaxTextSize = 14
+InfJumpConstraint.MinTextSize = 8
+InfJumpConstraint.Parent = InfJumpButton
 
 local InfJumpCorner = Instance.new("UICorner")
 InfJumpCorner.CornerRadius = UDim.new(0, 10)
@@ -521,13 +779,20 @@ InfJumpCorner.Parent = InfJumpButton
 local TPToolButton = Instance.new("TextButton")
 TPToolButton.Name = "TPToolButton"
 TPToolButton.Text = "TP Tool"
-TPToolButton.Size = UDim2.new(0, 200, 0, 80)
-TPToolButton.Position = UDim2.new(0, 333, 0, 134)
+TPToolButton.AnchorPoint = Vector2.new(0.5, 0.5)
+TPToolButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+TPToolButton.Position = UDim2.new(0.700, 0, 0.25, 0)
 TPToolButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 TPToolButton.BorderSizePixel = 0
-TPToolButton.TextSize = 14
+TPToolButton.TextScaled = true
+TPToolButton.TextWrapped = true
 TPToolButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 TPToolButton.Parent = contentFrame
+
+local TPToolConstraint = Instance.new("UITextSizeConstraint")
+TPToolConstraint.MaxTextSize = 14
+TPToolConstraint.MinTextSize = 8
+TPToolConstraint.Parent = TPToolButton
 
 local TPToolCorner = Instance.new("UICorner")
 TPToolCorner.CornerRadius = UDim.new(0, 10)
@@ -536,13 +801,20 @@ TPToolCorner.Parent = TPToolButton
 local SpectateButton = Instance.new("TextButton")
 SpectateButton.Name = "SpectateButton"
 SpectateButton.Text = "Spectate Tool"
-SpectateButton.Size = UDim2.new(0, 200, 0, 80)
-SpectateButton.Position = UDim2.new(0, 553, 0, 134)
+SpectateButton.AnchorPoint = Vector2.new(0.5, 0.5)
+SpectateButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+SpectateButton.Position = UDim2.new(1.055, 0, 0.25, 0)
 SpectateButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 SpectateButton.BorderSizePixel = 0
-SpectateButton.TextSize = 14
+SpectateButton.TextScaled = true
+SpectateButton.TextWrapped = true
 SpectateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 SpectateButton.Parent = contentFrame
+
+local SpectateConstraint = Instance.new("UITextSizeConstraint")
+SpectateConstraint.MaxTextSize = 14
+SpectateConstraint.MinTextSize = 8
+SpectateConstraint.Parent = SpectateButton
 
 local SpectateCorner = Instance.new("UICorner")
 SpectateCorner.CornerRadius = UDim.new(0, 10)
@@ -551,17 +823,112 @@ SpectateCorner.Parent = SpectateButton
 local GoToButton = Instance.new("TextButton")
 GoToButton.Name = "GoToButton"
 GoToButton.Text = "Player TP Tool"
-GoToButton.Size = UDim2.new(0, 200, 0, 80)
-GoToButton.Position = UDim2.new(0, 773, 0, 134)
+GoToButton.AnchorPoint = Vector2.new(0.5, 0.5)
+GoToButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+GoToButton.Position = UDim2.new(1.410, 0, 0.25, 0)
 GoToButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 GoToButton.BorderSizePixel = 0
-GoToButton.TextSize = 14
+GoToButton.TextScaled = true
+GoToButton.TextWrapped = true
 GoToButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 GoToButton.Parent = contentFrame
+
+local GoToConstraint = Instance.new("UITextSizeConstraint")
+GoToConstraint.MaxTextSize = 14
+GoToConstraint.MinTextSize = 8
+GoToConstraint.Parent = GoToButton
 
 local GoToCorner = Instance.new("UICorner")
 GoToCorner.CornerRadius = UDim.new(0, 10)
 GoToCorner.Parent = GoToButton
+
+local InfZoomButton = Instance.new("TextButton")
+InfZoomButton.Name = "InfZoomButton"
+InfZoomButton.Text = "Infinite Zoom: Off"
+InfZoomButton.AnchorPoint = Vector2.new(0.5, 0.5)
+InfZoomButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+InfZoomButton.Position = UDim2.new(-0.365, 0, 0.4, 0)
+InfZoomButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+InfZoomButton.BorderSizePixel = 0
+InfZoomButton.TextScaled = true
+InfZoomButton.TextWrapped = true
+InfZoomButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+InfZoomButton.Parent = contentFrame
+
+local InfZoomConstraint = Instance.new("UITextSizeConstraint")
+InfZoomConstraint.MaxTextSize = 14
+InfZoomConstraint.MinTextSize = 8
+InfZoomConstraint.Parent = InfZoomButton
+
+local InfZoomCorner = Instance.new("UICorner")
+InfZoomCorner.CornerRadius = UDim.new(0, 10)
+InfZoomCorner.Parent = InfZoomButton
+
+local AirStrafeButton = Instance.new("TextButton")
+AirStrafeButton.Name = "AirStrafeButton"
+AirStrafeButton.Text = "Air Strafe: Off"
+AirStrafeButton.AnchorPoint = Vector2.new(0.5, 0.5)
+AirStrafeButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+AirStrafeButton.Position = UDim2.new(-0.010, 0, 0.4, 0)
+AirStrafeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+AirStrafeButton.BorderSizePixel = 0
+AirStrafeButton.TextScaled = true
+AirStrafeButton.TextWrapped = true
+AirStrafeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AirStrafeButton.Parent = contentFrame
+
+local AirStrafeConstraint = Instance.new("UITextSizeConstraint")
+AirStrafeConstraint.MaxTextSize = 14
+AirStrafeConstraint.MinTextSize = 8
+AirStrafeConstraint.Parent = AirStrafeButton
+
+local AirStrafeCorner = Instance.new("UICorner")
+AirStrafeCorner.CornerRadius = UDim.new(0, 10)
+AirStrafeCorner.Parent = AirStrafeButton
+
+local MomentumButton = Instance.new("TextButton")
+MomentumButton.Name = "MomentumButton"
+MomentumButton.Text = "Ground Momentum: Off"
+MomentumButton.AnchorPoint = Vector2.new(0.5, 0.5)
+MomentumButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+MomentumButton.Position = UDim2.new(0.345, 0, 0.4, 0)
+MomentumButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+MomentumButton.BorderSizePixel = 0
+MomentumButton.TextScaled = true
+MomentumButton.TextWrapped = true
+MomentumButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MomentumButton.Parent = contentFrame
+
+local MomentumConstraint = Instance.new("UITextSizeConstraint")
+MomentumConstraint.MaxTextSize = 13
+MomentumConstraint.MinTextSize = 8
+MomentumConstraint.Parent = MomentumButton
+
+local MomentumCorner = Instance.new("UICorner")
+MomentumCorner.CornerRadius = UDim.new(0, 10)
+MomentumCorner.Parent = MomentumButton
+
+local NoSlowButton = Instance.new("TextButton")
+NoSlowButton.Name = "NoSlowButton"
+NoSlowButton.Text = "No Slow: Off"
+NoSlowButton.AnchorPoint = Vector2.new(0.5, 0.5)
+NoSlowButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+NoSlowButton.Position = UDim2.new(0.700, 0, 0.4, 0)
+NoSlowButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+NoSlowButton.BorderSizePixel = 0
+NoSlowButton.TextScaled = true
+NoSlowButton.TextWrapped = true
+NoSlowButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoSlowButton.Parent = contentFrame
+
+local NoSlowConstraint = Instance.new("UITextSizeConstraint")
+NoSlowConstraint.MaxTextSize = 14
+NoSlowConstraint.MinTextSize = 8
+NoSlowConstraint.Parent = NoSlowButton
+
+local NoSlowCorner = Instance.new("UICorner")
+NoSlowCorner.CornerRadius = UDim.new(0, 10)
+NoSlowCorner.Parent = NoSlowButton
 
 local sectionButtonTexts = {
     "Main",
@@ -579,7 +946,7 @@ for i, buttonText in ipairs(sectionButtonTexts) do
     sectionButton.Size = UDim2.new(1.5, 0, 0.15, 0)
     sectionButton.BorderSizePixel = 0
     sectionButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    sectionButton.BackgroundTransparency = 0.01
+    sectionButton.BackgroundTransparency = 0
     sectionButton.TextSize = 14
     sectionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     sectionButton.ZIndex = 11
@@ -690,6 +1057,10 @@ for buttonText, sectionButton in pairs(sectionButtons) do
             TPToolButton.Visible = true
             SpectateButton.Visible = true
             GoToButton.Visible = true
+            InfZoomButton.Visible = true
+            AirStrafeButton.Visible = true
+            MomentumButton.Visible = true
+            NoSlowButton.Visible = true
             topBarLabel.Text = "Main"
         elseif buttonText == "TSB" then
             local tsbFrame = contentFrame:FindFirstChild("TSBFrame")
@@ -703,13 +1074,20 @@ for buttonText, sectionButton in pairs(sectionButtons) do
                 local PhantasmButton = Instance.new("TextButton")
                 PhantasmButton.Name = "PhantasmButton"
                 PhantasmButton.Text = "Phantasm"
-                PhantasmButton.Size = UDim2.new(0, 200, 0, 80)
-                PhantasmButton.Position = UDim2.new(0, -327, 0, -75)
+                PhantasmButton.AnchorPoint = Vector2.new(0.5, 0.5)
+                PhantasmButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+                PhantasmButton.Position = UDim2.new(-0.365, 0, -0.05, 0)
                 PhantasmButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                 PhantasmButton.BorderSizePixel = 0
-                PhantasmButton.TextSize = 14
+                PhantasmButton.TextScaled = true
+                PhantasmButton.TextWrapped = true
                 PhantasmButton.TextColor3 = Color3.fromRGB(255, 255, 255)
                 PhantasmButton.Parent = tsbFrame
+
+                local PhantasmConstraint = Instance.new("UITextSizeConstraint")
+                PhantasmConstraint.MaxTextSize = 14
+                PhantasmConstraint.MinTextSize = 8
+                PhantasmConstraint.Parent = PhantasmButton
 
                 local PhantasmCorner = Instance.new("UICorner")
                 PhantasmCorner.CornerRadius = UDim.new(0, 10)
@@ -724,13 +1102,20 @@ for buttonText, sectionButton in pairs(sectionButtons) do
                 local DoviHubButton = Instance.new("TextButton")
                 DoviHubButton.Name = "DoviHubButton"
                 DoviHubButton.Text = "Dovi's Hub"
-                DoviHubButton.Size = UDim2.new(0, 200, 0, 80)
-                DoviHubButton.Position = UDim2.new(0, -107, 0, -75)
+                DoviHubButton.AnchorPoint = Vector2.new(0.5, 0.5)
+                DoviHubButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+                DoviHubButton.Position = UDim2.new(-0.010, 0, -0.05, 0)
                 DoviHubButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                 DoviHubButton.BorderSizePixel = 0
-                DoviHubButton.TextSize = 14
+                DoviHubButton.TextScaled = true
+                DoviHubButton.TextWrapped = true
                 DoviHubButton.TextColor3 = Color3.fromRGB(255, 255, 255)
                 DoviHubButton.Parent = tsbFrame
+
+                local DoviHubConstraint = Instance.new("UITextSizeConstraint")
+                DoviHubConstraint.MaxTextSize = 14
+                DoviHubConstraint.MinTextSize = 8
+                DoviHubConstraint.Parent = DoviHubButton
 
                 local DoviHubCorner = Instance.new("UICorner")
                 DoviHubCorner.CornerRadius = UDim.new(0, 10)
@@ -756,13 +1141,20 @@ for buttonText, sectionButton in pairs(sectionButtons) do
                 local YARHMButton = Instance.new("TextButton")
                 YARHMButton.Name = "YARHMButton"
                 YARHMButton.Text = "YARHM"
-                YARHMButton.Size = UDim2.new(0, 200, 0, 80)
-                YARHMButton.Position = UDim2.new(0, -327, 0, -75)
+                YARHMButton.AnchorPoint = Vector2.new(0.5, 0.5)
+                YARHMButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+                YARHMButton.Position = UDim2.new(-0.365, 0, -0.05, 0)
                 YARHMButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                 YARHMButton.BorderSizePixel = 0
-                YARHMButton.TextSize = 14
+                YARHMButton.TextScaled = true
+                YARHMButton.TextWrapped = true
                 YARHMButton.TextColor3 = Color3.fromRGB(255, 255, 255)
                 YARHMButton.Parent = mm2Frame
+
+                local YARHMConstraint = Instance.new("UITextSizeConstraint")
+                YARHMConstraint.MaxTextSize = 14
+                YARHMConstraint.MinTextSize = 8
+                YARHMConstraint.Parent = YARHMButton
 
                 local YARHMCorner = Instance.new("UICorner")
                 YARHMCorner.CornerRadius = UDim.new(0, 10)
@@ -788,13 +1180,20 @@ for buttonText, sectionButton in pairs(sectionButtons) do
                 local unloadButton = Instance.new("TextButton")
                 unloadButton.Name = "UnloadButton"
                 unloadButton.Text = "Unload"
-                unloadButton.Size = UDim2.new(0, 200, 0, 80)
-                unloadButton.Position = UDim2.new(0, -107, 0, -75)
+                unloadButton.AnchorPoint = Vector2.new(0.5, 0.5)
+                unloadButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+                unloadButton.Position = UDim2.new(-0.010, 0, -0.05, 0)
                 unloadButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
                 unloadButton.BorderSizePixel = 0
-                unloadButton.TextSize = 14
+                unloadButton.TextScaled = true
+                unloadButton.TextWrapped = true
                 unloadButton.TextColor3 = Color3.fromRGB(255,255,255)
                 unloadButton.Parent = settingsFrame
+
+                local unloadConstraint = Instance.new("UITextSizeConstraint")
+                unloadConstraint.MaxTextSize = 14
+                unloadConstraint.MinTextSize = 8
+                unloadConstraint.Parent = unloadButton
 
                 local unloadCorner = Instance.new("UICorner")
                 unloadCorner.CornerRadius = UDim.new(0,10)
@@ -820,13 +1219,20 @@ for buttonText, sectionButton in pairs(sectionButtons) do
                 local keepSentinelButton = Instance.new("TextButton")
                 keepSentinelButton.Name = "KeepSentinelButton"
                 keepSentinelButton.Text = "Keep Sentinel Hub: Yes"
-                keepSentinelButton.Size = UDim2.new(0, 200, 0, 80)
-                keepSentinelButton.Position = UDim2.new(0, 113, 0, -75)
+                keepSentinelButton.AnchorPoint = Vector2.new(0.5, 0.5)
+                keepSentinelButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+                keepSentinelButton.Position = UDim2.new(0.345, 0, -0.05, 0)
                 keepSentinelButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
                 keepSentinelButton.BorderSizePixel = 0
-                keepSentinelButton.TextSize = 13
+                keepSentinelButton.TextScaled = true
+                keepSentinelButton.TextWrapped = true
                 keepSentinelButton.TextColor3 = Color3.fromRGB(255,255,255)
                 keepSentinelButton.Parent = settingsFrame
+
+                local keepSentinelConstraint = Instance.new("UITextSizeConstraint")
+                keepSentinelConstraint.MaxTextSize = 13
+                keepSentinelConstraint.MinTextSize = 8
+                keepSentinelConstraint.Parent = keepSentinelButton
 
                 local keepSentinelCorner = Instance.new("UICorner")
                 keepSentinelCorner.CornerRadius = UDim.new(0,10)
@@ -844,13 +1250,20 @@ for buttonText, sectionButton in pairs(sectionButtons) do
                 local menuButton = Instance.new("TextButton")
                 menuButton.Name = "MenuButton"
                 menuButton.Text = "Menu\nKey: ..."
-                menuButton.Size = UDim2.new(0, 200, 0, 80)
-                menuButton.Position = UDim2.new(0, -327, 0, -75)
+                menuButton.AnchorPoint = Vector2.new(0.5, 0.5)
+                menuButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+                menuButton.Position = UDim2.new(-0.365, 0, -0.05, 0)
                 menuButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
                 menuButton.BorderSizePixel = 0
-                menuButton.TextSize = 14
+                menuButton.TextScaled = true
+                menuButton.TextWrapped = true
                 menuButton.TextColor3 = Color3.fromRGB(255,255,255)
                 menuButton.Parent = settingsFrame
+
+                local menuConstraint = Instance.new("UITextSizeConstraint")
+                menuConstraint.MaxTextSize = 14
+                menuConstraint.MinTextSize = 8
+                menuConstraint.Parent = menuButton
 
                 local menuCorner = Instance.new("UICorner")
                 menuCorner.CornerRadius = UDim.new(0,10)
@@ -922,48 +1335,6 @@ DanyadsFlingButton.MouseButton1Click:Connect(function()
     end)
 end)
 
-AntiFlingButton.MouseButton1Click:Connect(function()
-    isAntiFlingEnabled = not isAntiFlingEnabled
-    if isNoClipEnabled then
-        disableNoClip()
-        isNoClipEnabled = false
-        NoClipButton.Text = "No Clip: Off"
-    end
-    if isAntiFlingEnabled then
-        enableAntiFling()
-        AntiFlingButton.Text = "Anti Fling: On"
-    else
-        disableAntiFling()
-        AntiFlingButton.Text = "Anti Fling: Off"
-    end
-end)
-
-NoClipButton.MouseButton1Click:Connect(function()
-    isNoClipEnabled = not isNoClipEnabled
-    if isAntiFlingEnabled then
-        disableAntiFling()
-        isAntiFlingEnabled = false
-        AntiFlingButton.Text = "Anti Fling: Off"
-    end
-    if isNoClipEnabled then
-        NoClipButton.Text = "No Clip: On"
-        enableNoClip()
-    else
-        NoClipButton.Text = "No Clip: Off"
-        disableNoClip()
-    end
-end)
-
-InfJumpButton.MouseButton1Click:Connect(function()
-    isInfJumping = not isInfJumping
-    if isInfJumping then
-        enableInfJump()
-        InfJumpButton.Text = "Infinite Jump: On"
-    else
-        disableInfJump()
-        InfJumpButton.Text = "Infinite Jump: Off"
-    end
-end)
 
 FlyButton.MouseButton1Click:Connect(function()
     pcall(function()
@@ -1029,6 +1400,86 @@ GoToButton.MouseButton1Click:Connect(function()
     pcall(function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/GoTo/main/Source"))()
     end)
+end)
+
+AntiFlingButton.MouseButton1Click:Connect(function()
+    isAntiFlingEnabled = not isAntiFlingEnabled
+    if isNoClipEnabled then
+        disableNoClip()
+        isNoClipEnabled = false
+        NoClipButton.Text = "No Clip: Off"
+    end
+    if isAntiFlingEnabled then
+        enableAntiFling()
+        AntiFlingButton.Text = "Anti Fling: On"
+    else
+        disableAntiFling()
+        AntiFlingButton.Text = "Anti Fling: Off"
+    end
+end)
+
+NoClipButton.MouseButton1Click:Connect(function()
+    isNoClipEnabled = not isNoClipEnabled
+    if isAntiFlingEnabled then
+        disableAntiFling()
+        isAntiFlingEnabled = false
+        AntiFlingButton.Text = "Anti Fling: Off"
+    end
+    if isNoClipEnabled then
+        NoClipButton.Text = "No Clip: On"
+        enableNoClip()
+    else
+        NoClipButton.Text = "No Clip: Off"
+        disableNoClip()
+    end
+end)
+
+InfJumpButton.MouseButton1Click:Connect(function()
+    isInfJumping = not isInfJumping
+    if isInfJumping then
+        enableInfJump()
+        InfJumpButton.Text = "Infinite Jump: On"
+    else
+        disableInfJump()
+        InfJumpButton.Text = "Infinite Jump: Off"
+    end
+end)
+
+InfZoomButton.MouseButton1Click:Connect(function()
+	if not isInfiniteZoomEnabled then
+		EnableInfiniteZoom()
+		InfZoomButton.Text = "Infinite Zoom: On"
+	else
+		DisableInfiniteZoom()
+		InfZoomButton.Text = "Infinite Zoom: Off"
+	end
+end)
+
+AirStrafeButton.MouseButton1Click:Connect(function()
+	ToggleAirStrafe()
+    if isAirStrafeEnabled then
+		AirStrafeButton.Text = "Air Strafe: On"
+	else
+		AirStrafeButton.Text = "Air Strafe: Off"
+	end
+end)
+
+MomentumButton.MouseButton1Click:Connect(function()
+    ToggleMomentum()
+	if isMomentumEnabled then
+		MomentumButton.Text = "Ground Momentum: On"
+	else
+		MomentumButton.Text = "Ground Momentum: Off"
+	end
+end)
+
+NoSlowButton.MouseButton1Click:Connect(function()
+    ToggleNoSlow()
+	if isNoSlowEnabled then
+		NoSlowButton.Text = "No Slow: On"
+	else
+		NoSlowButton.Text = "No Slow: Off"
+	end
 end)
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
