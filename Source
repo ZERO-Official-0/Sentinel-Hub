@@ -1168,6 +1168,7 @@ for buttonText, sectionButton in pairs(sectionButtons) do
             MomentumButton.Visible = true
             NoSlowButton.Visible = true
             ResetSpeedButton.Visible = true
+            XRAYButton.Visible = true
             topBarLabel.Text = "Main"
         elseif buttonText == "TSB" then
             local tsbFrame = contentFrame:FindFirstChild("TSBFrame")
