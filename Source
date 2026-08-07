@@ -28,6 +28,7 @@ local isInfiniteZoomEnabled = false
 local isAirStrafeEnabled = false
 local isMomentumEnabled = false
 local isNoSlowEnabled = false
+local NoSlowSpeed = 16
 local ScriptURL = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Sentinel-Hub/main/Source"))()'
 
 game.Players.LocalPlayer.OnTeleport:Connect(function(State)
@@ -185,17 +186,44 @@ local function ToggleMomentum()
     isMomentumEnabled = not isMomentumEnabled
 end
 
-local function ToggleNoSlow()
-    isNoSlowEnabled = not isNoSlowEnabled
+local function GetHumanoidSpeed()
+    if player.Character then
+        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            return humanoid.WalkSpeed
+        end
+    end
+    return 16
 end
+
+local function EnableNoSlow()
+    if player.Character then
+        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = NoSlowSpeed
+        end
+    else
+        print('Error')
+    end
+end
+
+Players.LocalPlayer.CharacterAdded:Connect(function(character)
+    if isNoSlowEnabled then
+        EnableNoSlow()
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if isNoSlowEnabled then
+        EnableNoSlow()
+    end
+end)
 
 local function isAirborne(humanoid)
     local state = humanoid:GetState()
     return state == Enum.HumanoidStateType.Freefall
         or state == Enum.HumanoidStateType.FallingDown
-        or state == Enum.HumanoidStateType.Falling
         or state == Enum.HumanoidStateType.Jumping
-        or state == Enum.HumanoidStateType.PlatformPound
 end
 
 local function onCharacterAdded(character)
@@ -245,6 +273,11 @@ local function onCharacterAdded(character)
     end)
 end
 
+if player.Character then
+    onCharacterAdded(player.Character)
+end
+player.CharacterAdded:Connect(onCharacterAdded)
+
 -- ============================================
 -- UNLOAD FEATURES
 -- ============================================
@@ -281,21 +314,18 @@ local features = {
     AirStrafe = {
         enabled = function() return isAirStrafeEnabled end,
         disable = function()
-            DisableAirStrafe()
             isAirStrafeEnabled = false
         end
     },
     Momentum = {
         enabled = function() return isMomentumEnabled end,
         disable = function()
-            DisableMomentum()
             isMomentumEnabled = false
         end
     },
     NoSlow = {
         enabled = function() return isNoSlowEnabled end,
         disable = function()
-            DisableNoSlow()
             isNoSlowEnabled = false
         end
     },
@@ -930,6 +960,28 @@ local NoSlowCorner = Instance.new("UICorner")
 NoSlowCorner.CornerRadius = UDim.new(0, 10)
 NoSlowCorner.Parent = NoSlowButton
 
+local ResetSpeedButton = Instance.new("TextButton")
+ResetSpeedButton.Name = "ResetSpeedButton"
+ResetSpeedButton.Text = "Reset Speed (16)"
+ResetSpeedButton.AnchorPoint = Vector2.new(0.5, 0.5)
+ResetSpeedButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+ResetSpeedButton.Position = UDim2.new(1.055, 0, 0.4, 0)
+ResetSpeedButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+ResetSpeedButton.BorderSizePixel = 0
+ResetSpeedButton.TextScaled = true
+ResetSpeedButton.TextWrapped = true
+ResetSpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ResetSpeedButton.Parent = contentFrame
+
+local ResetSpeedConstraint = Instance.new("UITextSizeConstraint")
+ResetSpeedConstraint.MaxTextSize = 14
+ResetSpeedConstraint.MinTextSize = 8
+ResetSpeedConstraint.Parent = ResetSpeedButton
+
+local ResetSpeedCorner = Instance.new("UICorner")
+ResetSpeedCorner.CornerRadius = UDim.new(0, 10)
+ResetSpeedCorner.Parent = ResetSpeedButton
+
 local sectionButtonTexts = {
     "Main",
     "Others",
@@ -1061,6 +1113,7 @@ for buttonText, sectionButton in pairs(sectionButtons) do
             AirStrafeButton.Visible = true
             MomentumButton.Visible = true
             NoSlowButton.Visible = true
+            ResetSpeedButton.Visible = true
             topBarLabel.Text = "Main"
         elseif buttonText == "TSB" then
             local tsbFrame = contentFrame:FindFirstChild("TSBFrame")
@@ -1474,12 +1527,23 @@ MomentumButton.MouseButton1Click:Connect(function()
 end)
 
 NoSlowButton.MouseButton1Click:Connect(function()
-    ToggleNoSlow()
+    isNoSlowEnabled = not isNoSlowEnabled
 	if isNoSlowEnabled then
-		NoSlowButton.Text = "No Slow: On"
+        NoSlowSpeed = GetHumanoidSpeed()
+        EnableNoSlow()
+		NoSlowButton.Text = "No Slow: On\n(Stopped Speed Changes)"
 	else
 		NoSlowButton.Text = "No Slow: Off"
 	end
+end)
+
+ResetSpeedButton.MouseButton1Click:Connect(function()
+    if player.Character then
+        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = 16
+        end
+    end
 end)
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
@@ -1508,5 +1572,20 @@ local function disableAllFeatures()
         disableInfJump()
         isInfJumping = false
         InfJumpButton.Text = "Infinite Jump: Off"
+    end
+
+    if isAirStrafeEnabled then
+        isAirStrafeEnabled = false
+        AirStrafeButton.Text = "Air Strafe: Off"
+    end
+
+    if isMomentumEnabled then
+        isMomentumEnabled = false
+        MomentumButton.Text = "Ground Momentum: Off"
+    end
+
+    if isNoSlowEnabled then
+        isNoSlowEnabled = false
+        NoSlowButton.Text = "No Slow: Off"
     end
 end
