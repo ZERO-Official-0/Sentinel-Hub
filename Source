@@ -29,6 +29,7 @@ local isAirStrafeEnabled = false
 local isMomentumEnabled = false
 local isNoSlowEnabled = false
 local NoSlowSpeed = 16
+local isXRAYEnabled = false
 local ScriptURL = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/ZERO-Official-0/Sentinel-Hub/main/Source"))()'
 
 game.Players.LocalPlayer.OnTeleport:Connect(function(State)
@@ -65,7 +66,7 @@ local function disableAntiFling()
     antifling:Disconnect()
     antifling = nil
     for part, originalState in pairs(originalCollision) do
-        if part.Parent then -- evita errori se la parte è stata distrutta
+        if part.Parent then
             part.CanCollide = originalState
         end
     end
@@ -278,6 +279,30 @@ if player.Character then
 end
 player.CharacterAdded:Connect(onCharacterAdded)
 
+local function UpdateXRAY()
+    for _, v in pairs(Workspace:GetDescendants()) do
+        if v:IsA("BasePart") then
+            local characterModel = v:FindFirstAncestorOfClass("Model")
+            local isCharacterPart = characterModel and characterModel:FindFirstChildOfClass("Humanoid")
+            if not isCharacterPart then
+                v.LocalTransparencyModifier = isXRAYEnabled and 0.5 or 0
+            end
+        end
+    end
+end
+
+local function EnableXRAY()
+    if isXRAYEnabled then return end
+    isXRAYEnabled = true
+    UpdateXRAY()
+end
+
+local function DisableXRAY()
+    if not isXRAYEnabled then return end
+    isXRAYEnabled = false
+    UpdateXRAY()
+end
+
 -- ============================================
 -- UNLOAD FEATURES
 -- ============================================
@@ -329,6 +354,13 @@ local features = {
             isNoSlowEnabled = false
         end
     },
+    XRAY = {
+        enabled = function() return isXRAYEnabled end,
+        disable = function()
+            DisableXRAY()
+            isXRAYEnabled = false
+        end
+    }
 }
 
 -- ============================================
@@ -982,6 +1014,28 @@ local ResetSpeedCorner = Instance.new("UICorner")
 ResetSpeedCorner.CornerRadius = UDim.new(0, 10)
 ResetSpeedCorner.Parent = ResetSpeedButton
 
+local XRAYButton = Instance.new("TextButton")
+XRAYButton.Name = "XRAYButton"
+XRAYButton.Text = "XRAY: Off"
+XRAYButton.AnchorPoint = Vector2.new(0.5, 0.5)
+XRAYButton.Size = UDim2.new(0.32, 0, 0.12, 0)
+XRAYButton.Position = UDim2.new(1.410, 0, 0.4, 0)
+XRAYButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+XRAYButton.BorderSizePixel = 0
+XRAYButton.TextScaled = true
+XRAYButton.TextWrapped = true
+XRAYButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+XRAYButton.Parent = contentFrame
+
+local XRAYConstraint = Instance.new("UITextSizeConstraint")
+XRAYConstraint.MaxTextSize = 14
+XRAYConstraint.MinTextSize = 8
+XRAYConstraint.Parent = XRAYButton
+
+local XRAYCorner = Instance.new("UICorner")
+XRAYCorner.CornerRadius = UDim.new(0, 10)
+XRAYCorner.Parent = XRAYButton
+
 local sectionButtonTexts = {
     "Main",
     "Others",
@@ -1546,6 +1600,16 @@ ResetSpeedButton.MouseButton1Click:Connect(function()
     end
 end)
 
+XRAYButton.MouseButton1Click:Connect(function()
+    if not isXRAYEnabled then
+        EnableXRAY()
+        XRAYButton.Text = "XRAY: On"
+    else
+        DisableXRAY()
+        XRAYButton.Text = "XRAY: Off"
+    end
+end)
+
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed or isBindingMenuKey or ignoreMenuToggleAfterBinding then
         return
@@ -1587,5 +1651,11 @@ local function disableAllFeatures()
     if isNoSlowEnabled then
         isNoSlowEnabled = false
         NoSlowButton.Text = "No Slow: Off"
+    end
+
+    if isXRAYEnabled then
+        DisableXRAY()
+        isXRAYEnabled = false
+        XRAYButton.Text = "XRAY: Off"
     end
 end
